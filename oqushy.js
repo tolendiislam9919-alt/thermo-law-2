@@ -56,7 +56,7 @@ const OQ=(()=>{
 
 
   /* ---------- 3D квест: телефон – джойстик ---------- */
-  let qSig='', qAt=0, joyOn=false, joyV={x:0,y:0}, joyZero=0, joySent=0, awake=false;
+  let qSig='', qAt=0, joyOn=false, joyV={x:0,y:0,lx:0,ly:0}, joyA=[false,false], joyZero=0, joySent=0, awake=false;
   /* телефон экраны сөнбесін: Wake Lock (https), болмаса үнсіз кішкентай видео айналып тұрады */
   function keepAwake(){ if(awake) return; awake=true;
     if(navigator.wakeLock&&navigator.wakeLock.request){ const req=()=>navigator.wakeLock.request('screen').catch(()=>{}); req(); document.addEventListener('visibilitychange',()=>{ if(!document.hidden) req(); }); return; }
@@ -70,11 +70,12 @@ const OQ=(()=>{
   const qLeft=()=>{ const q=ST.qs; if(!q) return 0; const run=q.ph==='play'||q.ph==='q'||q.ph==='qok'; return Math.max(0,q.left-(run?(Date.now()-qAt)/1000:0)); };
   const qfmt=s=>{ s=Math.ceil(s); return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); };
   setInterval(()=>{ if(screen==='quest'){ const e=$('qpT'); if(e) e.textContent=qfmt(qLeft()); }
-    if(net&&joyOn) net.send({t:'in',x:+joyV.x.toFixed(2),y:+joyV.y.toFixed(2)}); else if(net&&joyZero>0){ joyZero--; net.send({t:'in',x:0,y:0}); } },110);
+    if(net&&joyOn) joySend(); else if(net&&joyZero>0){ joyZero--; net.send({t:'in',x:0,y:0,lx:0,ly:0}); } },110);
+  const joySend=()=>net.send({t:'in',x:+joyV.x.toFixed(2),y:+joyV.y.toFixed(2),lx:+joyV.lx.toFixed(2),ly:+joyV.ly.toFixed(2)});
   function vQuest(){ const q=ST.qs||{g:-1}; if(screen!=='quest'){ qSig=''; cover(true); } screen='quest'; shown=null; setTop();
     const rm=QROOMS[q.g], mine=!!rm&&q.g===G, drv=q.drv===PID;
     const sig=[q.g,mine,q.ph,drv,q.drv||'',q.dn||'',q.q?q.q.i+':'+q.q.bad+':'+q.q.sel.join(',')+':'+q.q.ok+':'+q.q.m:'',q.code?q.code.n+':'+q.code.m:'',(q.dig||[]).join(',')].join('|');
-    if(sig!==qSig){ qSig=sig; joyOn=false;
+    if(sig!==qSig){ qSig=sig; joyOn=false; joyA=[false,false]; joyV={x:0,y:0,lx:0,ly:0};
       let h='';
       if(!rm) h=`<div class="box" style="text-align:center;padding-top:30px"><div style="font-size:54px">🎮</div><h1>Квест жақында басталады</h1><p class="mut">Мұғалім бөлмені ашқанда, тобыңның кезегі келсе, осы жерде джойстик шығады.</p></div>`;
       else { h=`<div class="qp"><div class="qph" style="border-left:8px solid ${rm.c}"><span style="color:${rm.c}">${q.g+1}-бөлме · ${GR[q.g].n} топ</span><span>⏱ <b id="qpT">${qfmt(qLeft())}</b></span><span>⭐ <b>${q.sc}</b></span></div>`+(mine?`<p style="font:700 18px 'Segoe UI';margin:8px 0 0">🔐 Код: <b style="font:800 24px Consolas,monospace">${(q.dig||[]).map(d=>d==null?'_':d).join(' ')}</b></p>`:'');
@@ -85,20 +86,24 @@ const OQ=(()=>{
         else if(q.q) h+=`<h1 style="font-size:20px;margin-top:10px">Станция ${q.q.i+1}</h1><p style="font:700 20px/1.45 'Segoe UI'">${esc(q.q.t)}</p>`+(q.q.f?`<div class="fhint">Кеңес: ${esc(q.q.f)}</div>`:'')+
           (q.q.k==='num'?`<div class="kpad n10">${[1,2,3,4,5,6,7,8,9,0].map(v=>`<button data-v="${v}"${q.q.ok?' disabled':''}>${v}</button>`).join('')}</div>`:`<div class="qpo">${q.q.items.map((o,j)=>`<button data-v="${j}"${q.q.ok||q.q.sel.includes(j)?' disabled':''}>${q.q.sel.includes(j)&&q.q.k==='order'?'<b>'+(q.q.sel.indexOf(j)+1)+'.</b> ':''}${esc(o)}</button>`).join('')}</div>`)+
           `<p style="font:700 17px 'Segoe UI'">${esc(q.q.m||'Тобыңмен бірге есептеп, жауапты бас!')}</p>`;
-        else if(drv) h+=`<p class="mut" style="margin:10px 0 0">Сен – <b>жүргізушісің</b>. Тақтаға қарап жүргіз: <b>↑ алға · ↓ артқа · ← → бұрылу</b>. Станцияларға (1, 2, 3) бар, сосын <b>ШЫҒУ</b> есігіне!</p><div class="joy" id="qpJoy"><div class="knob" id="qpKnob" style="background:${rm.c}"></div></div><p class="mut">Станция: ${q.dc}/3</p>`;
+        else if(drv) h+=`<p class="mut" style="margin:10px 0 0">Сен – <b>жүргізушісің</b>. Тақтаға қарап жүргіз: <b>сол жақпен – жүр</b>, <b>оң жақпен – жан-жаққа қара</b>. Станцияларға (1, 2, 3) бар, сосын <b>есікке</b>!</p><div class="joys"><div><div class="joy" id="qpJM"><div class="knob" id="qpKM" style="background:${rm.c}"></div></div><p>🚶 Жүру</p></div><div><div class="joy" id="qpJL"><div class="knob" id="qpKL" style="background:#1d2430"></div></div><p>👀 Қарау</p></div></div><p class="mut">Станция: ${q.dc}/3</p>`;
         else h+=`<div style="font-size:48px;margin-top:14px">🎮</div><h1 style="font-size:21px">${q.drv?'Жүргізуші: '+esc(q.dn):'Әзірге жүргізуші жоқ!'}</h1><p class="mut">Станцияға жеткенде сұрақ осы жерде шығады – бірге жауап беріңдер!</p><button class="drv" id="qpDrv" style="background:${rm.c}">🎮 ${q.drv?'Мен жүргізейін':'Мен жүргіземін'}</button>`;
         h+='</div>'; }
       app.innerHTML=h;
       const d=$('qpDrv'); if(d) d.onclick=()=>{ net.send({t:'drv'}); d.disabled=true; d.textContent='…'; buzz(60); };
       app.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{ net.send({t:'ans',i:q.q.i,v:b.dataset.v}); buzz(40); });
       app.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{ net.send({t:'key',v:b.dataset.k}); buzz(40); });
-      const J=$('qpJoy'); if(J){ const K=$('qpKnob');
-        const mv=e=>{ const r=J.getBoundingClientRect(), R=r.width/2, dx=e.clientX-(r.left+R), dy=e.clientY-(r.top+R), L=Math.hypot(dx,dy), k=L>R*.72?R*.72/L:1;
-          K.style.transform=`translate(${dx*k}px,${dy*k}px)`; const n=Math.min(1,L/(R*.72)); joyV={x:L?dx/L*n:0,y:L?dy/L*n:0}; if(Date.now()-joySent>55&&net){ joySent=Date.now(); net.send({t:'in',x:+joyV.x.toFixed(2),y:+joyV.y.toFixed(2)}); } };
-        J.addEventListener('pointerdown',e=>{ J.setPointerCapture(e.pointerId); joyOn=true; mv(e); e.preventDefault(); });
-        J.addEventListener('pointermove',e=>{ if(joyOn) mv(e); });
-        const up=()=>{ joyOn=false; joyV={x:0,y:0}; joyZero=3; K.style.transform=''; };
-        J.addEventListener('pointerup',up); J.addEventListener('pointercancel',up); } }
+      /* екі джойстик: әрқайсысы өз саусағын ұстайды (multi-touch) */
+      [['qpJM','qpKM',0],['qpJL','qpKL',1]].forEach(([jid,kid,w])=>{ const J=$(jid); if(!J) return; const K=$(kid); let pidT=null;
+        const mv=e=>{ const r=J.getBoundingClientRect(), R=r.width/2, dx=e.clientX-(r.left+R), dy=e.clientY-(r.top+R), L=Math.hypot(dx,dy), k=L>R*.7?R*.7/L:1;
+          K.style.transform=`translate(${dx*k}px,${dy*k}px)`; const n=Math.min(1,L/(R*.7)), vx=L?dx/L*n:0, vy=L?dy/L*n:0;
+          if(w===0){ joyV.x=vx; joyV.y=vy; } else { joyV.lx=vx; joyV.ly=vy; }
+          if(Date.now()-joySent>55&&net){ joySent=Date.now(); joySend(); } };
+        J.addEventListener('pointerdown',e=>{ pidT=e.pointerId; try{ J.setPointerCapture(e.pointerId); }catch(x){} joyA[w]=true; joyOn=true; mv(e); e.preventDefault(); });
+        J.addEventListener('pointermove',e=>{ if(joyA[w]&&e.pointerId===pidT) mv(e); });
+        const up=e=>{ if(e&&pidT!=null&&e.pointerId!==pidT) return; joyA[w]=false; pidT=null; if(w===0){ joyV.x=0; joyV.y=0; } else { joyV.lx=0; joyV.ly=0; } K.style.transform='';
+          joyOn=joyA[0]||joyA[1]; if(net) joySend(); if(!joyOn) joyZero=3; };
+        J.addEventListener('pointerup',up); J.addEventListener('pointercancel',up); }); }
     else { const e=$('qpT'); if(e) e.textContent=qfmt(qLeft()); } }
 
   function render(){ setTop(); if(kicked||screen==='name') return; if(joined&&ST.act==='quest'){ vQuest(); return; } if(joined&&ST.act){ showPage(ST.act); return; } const sig=joined+'|'+G; if(screen!=='wait'||waitSig!==sig){ waitSig=sig; vWait(); } }

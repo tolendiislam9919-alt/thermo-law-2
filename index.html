@@ -102,6 +102,10 @@ sup,sub{font-size:.72em;line-height:0}
 .robot.shake{animation:none}
 .robot.shake #rbArm{animation:shake .16s ease-in-out infinite alternate} @keyframes shake{from{transform:rotate(-14deg)}to{transform:rotate(12deg) translateY(-6px)}}
 .robot.shake .eye{fill:#ffd75e}
+.rblist{width:100%;display:flex;flex-direction:column;gap:6px;font-size:15px}
+.rblist[hidden]{display:none}
+.rblist textarea{width:100%;height:300px;font:16px/1.5 "Segoe UI",sans-serif;padding:8px;border:2px solid #c79a3a;border-radius:6px;resize:vertical}
+.rbl.listing .robot,.rbl.listing .bubble{display:none}
 .pslots{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;min-height:0}
 .pslot{border:3px dashed #cbbfa8;border-radius:14px;position:relative;display:flex;min-height:0}
 .pslot>.ph{margin:auto;font:700 22px Georgia,serif;color:#b9ad95}
@@ -211,7 +215,17 @@ sup,sub{font-size:.72em;line-height:0}
 .knob{position:absolute;left:50%;top:50%;width:100px;height:100px;margin:-50px 0 0 -50px;border-radius:50%;box-shadow:0 6px 14px rgba(0,0,0,.3),inset 0 -8px 0 rgba(0,0,0,.2);pointer-events:none}
 .qpo button{display:block;width:100%;font:700 18px/1.3 "Segoe UI";padding:14px;margin:8px 0;border-radius:10px;border:2px solid var(--line);background:#fff;text-align:left;color:#1d2430}
 .qpo button.no{background:#fdeceb;border-color:var(--red);opacity:.6}
+.joys{display:flex;justify-content:space-between;gap:10px;margin-top:6px}
+.joys>div{flex:1;text-align:center}
+.joys .joy{width:min(44vw,220px);height:min(44vw,220px);margin:6px auto 2px}
+.joys p{margin:0;font:700 16px 'Segoe UI'}
+.joys .knob{width:40%;height:40%;margin:-20% 0 0 -20%}
 .qp .drv{display:block;width:100%;font:700 20px "Segoe UI";padding:16px;border-radius:12px;border:none;color:#fff;margin:14px 0}
+
+/* қозғалтқыш/тоңазытқыш түсіндірмесі */
+.fwtxt{font-size:18px;line-height:1.5;min-height:96px}
+.fbig{font:700 24px "Cambria Math","Times New Roman",serif;color:#1d2430;background:#fff8e6;border-left:6px solid var(--yellow);border-radius:4px;padding:6px 12px;margin-top:6px}
+.gapx{flex:1}
 
 /* миға шабуыл */
 .bgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
@@ -463,8 +477,11 @@ html.oq .toast{position:fixed;top:54px;font-size:16px;width:max-content;max-widt
           <path d="M214 132 L284 132 L274 100 L224 100 Z" fill="#1d2430"/><rect x="208" y="128" width="82" height="9" rx="4" fill="#1d2430"/></g>
         <rect x="104" y="274" width="30" height="40" rx="8" fill="#4a4f57"/><rect x="166" y="274" width="30" height="40" rx="8" fill="#4a4f57"/>
         <ellipse cx="150" cy="320" rx="90" ry="8" fill="rgba(0,0,0,.12)"/></svg></div>
-      <div class="btns"><button class="btn main big2" id="rbGo">🎲 Жеребе тастау</button><button class="btn" id="rbAll">👁 Барлығын ашу</button></div>
+      <div class="btns"><button class="btn main big2" id="rbGo">🎲 Жеребе тастау</button><button class="btn" id="rbAll">👁 Барлығын ашу</button><button class="btn" id="rbEdit">✎ Тізім</button></div>
       <div class="mut" id="rbInfo"></div>
+      <div class="rblist" id="rbList" hidden><b>Сынып тізімі</b><span class="mut">Әр жолға бір оқушы (Тегі Аты). Excel/Word-тан көшіріп қоюға болады. Тізім тек осы компьютердегі браузерде сақталады, сайтта жарияланбайды.</span>
+        <textarea id="rbTa" spellcheck="false" placeholder="Тегі Аты&#10;Тегі Аты&#10;…"></textarea>
+        <div class="btns"><button class="btn main" id="rbSave">💾 Тізімді сақтау</button><button class="btn" id="rbCancel">Жабу</button><span class="mut" id="rbCnt"></span></div></div>
     </div>
     <div class="pslots" id="pSlots"></div>
   </div>
@@ -543,16 +560,17 @@ html.oq .toast{position:fixed;top:54px;font-size:16px;width:max-content;max-widt
 </section>
 
 <!-- 9 -->
-<section class="slide" data-title="Термодинамиканың 2-заңы" data-hint="Q₁ = A + Q₂ (қозғалтқыш);  Q₁ = Q₂ + A (тоңазытқыш)">
+<section class="slide" data-wide="1" data-title="Термодинамиканың 2-заңы" data-hint="Q₁ = A + Q₂ (қозғалтқыш);  Q₁ = Q₂ + A (тоңазытқыш)">
   <h2 class="st"><small>Негізгі заң · §14</small>Термодинамиканың екінші заңы</h2>
   <div class="duo"><div class="pa">
   <p class="lead" style="font-size:17.5px">Екінші заң жылу процестерінің <b>бағытын</b> қарастырады: олар қайтымсыз және бір бағытта жүреді. Екі ғалымның анықтамасы:</p>
   <div class="law"><b class="n">В. Томсон (лорд Кельвин, 1824–1907)</b><div class="quote">Жеке бөлініп алынған энергия көзінің салқындауының арқасында үздіксіз жұмыс жасау мүмкін емес.</div><span class="mut" style="font-size:15.5px">Жылудың бір бөлігі (Q₂) міндетті түрде суытқышқа беріледі → ПӘК &lt; 100 %. Демек, <b>екінші ретті мәңгі қозғалтқыш жасау мүмкін емес</b>.</span></div>
   <div class="law"><b class="n">Р. Клаузиус анықтамасы</b><div class="quote">Температурасы төмен денеден температурасы жоғары денеге жылу берілуі мүмкін емес.</div><span class="mut" style="font-size:15.5px">Өздігінен – мүмкін емес. Тоңазытқыш мұны тек <b>сыртқы жұмыс</b> (электр энергиясы) есебінен жасайды.</span></div>
   </div><div class="pb">
-  <canvas class="lab" id="cFlow" width="840" height="320"></canvas>
-  <div class="btns"><button class="btn on" id="flEng">⚙ Жылу қозғалтқышы</button><button class="btn" id="flFr">❄ Тоңазытқыш</button></div>
-  <div class="ctl"><div class="lab"><span id="flLbl">Суытқышқа берілетін жылу Q₂</span><span class="val" id="flV"></span></div><input type="range" id="flS" min="0" max="900" step="50" value="600"></div>
+  <div class="btns"><button class="btn on" id="fwEng">⚙ Жылу қозғалтқышы</button><button class="btn" id="fwFr">❄ Тоңазытқыш</button><span class="gapx"></span>
+    <button class="btn" id="fwPrev">◀</button><b id="fwN" style="font:700 18px Georgia,serif;min-width:52px;text-align:center"></b><button class="btn main" id="fwNext">Келесі қадам ▶</button><button class="btn" id="fwAuto">▶ Өзі көрсетсін</button></div>
+  <canvas class="lab" id="cFlow2" width="840" height="420"></canvas>
+  <div class="card fwtxt" id="fwTxt"></div>
   </div></div>
 </section>
 
@@ -619,7 +637,7 @@ html.oq .toast{position:fixed;top:54px;font-size:16px;width:max-content;max-widt
       <div class="qhud" id="qHud"></div>
       <div class="qqbox" id="qQ" hidden></div>
       <div class="qover" id="qOver" hidden></div>
-      <div class="qhint" id="qHint">Джойстик: ↑ алға · ↓ артқа · ← → бұрылу. Пернетақта: ← ↑ → ↓ немесе W A S D</div>
+      <div class="qhint" id="qHint">Телефон: сол джойстик – жүру, оң – қарау. Компьютер: тышқанмен сүйреп – қарау, W A S D – жүру, ← → – бұрылу</div>
     </div>
   </div>
 </section>
@@ -874,10 +892,18 @@ function gdDraw(){ if(rbBusy) return; if(GD&&!confirm('Топтар қайта �
     say('Дайын! Үш қағаз – үш топ. Әр топтан бір оқушы шығып, <b>қағазды ашсын</b> 📜'); SND.bell();
     if(window.PH) PH.regroup(); if(window.JR) JR.build(); },2600); }
 $('rbGo').onclick=gdDraw;
+function rbList(on){ const L=rosterNow(); $('rbList').hidden=!on; $('rbList').parentElement.classList.toggle('listing',on); if(on){ $('rbTa').value=L.join('\n'); rbCnt(); setTimeout(()=>$('rbTa').focus(),50); } }
+function rbCnt(){ const n=$('rbTa').value.split('\n').map(x=>x.trim()).filter(Boolean).length; $('rbCnt').textContent=n+' оқушы'; }
+$('rbTa').addEventListener('input',rbCnt);
+$('rbEdit').onclick=()=>rbList($('rbList').hidden);
+$('rbCancel').onclick=()=>rbList(false);
+$('rbSave').onclick=()=>{ const l=$('rbTa').value.split('\n').map(x=>x.replace(/[<>&"'`]/g,'').replace(/\s+/g,' ').trim()).filter(Boolean);
+  if(l.length<3){ toast('Тізімде кемінде 3 оқушы болсын'); return; }
+  ROSTER=l; store.set('roster',ROSTER); $('roster').value=ROSTER.join('\n'); rbList(false); gdPaint(false); if(window.JR) JR.build(); if(window.PH) PH.regroup(); SND.ok(); toast('Тізім сақталды: '+l.length+' оқушы. Енді «Жеребе тастау» басыңыз'); };
 $('rbAll').onclick=()=>{ if(!GD){ toast('Алдымен жеребе тастаңыз'); return; } GD.open=[1,1,1]; store.set('gd2',GD); gdPaint(false); say('Міне, барлық топ! Табысты жұмыс! 💪'); };
 $('pSlots').addEventListener('click',e=>{ const p=e.target.closest('.paper.in'); if(!p||!GD||rbBusy) return; const i=+p.dataset.p; if(GD.open[i]) return; GD.open[i]=1; store.set('gd2',GD); p.classList.add('open'); SND.ok();
   say(`<b style="color:${GR[i].c}">${GR[i].n} топ</b> – ${GD.groups[i].length} оқушы. `+(GD.open.every(Boolean)?'Барлық топ белгілі! Орындарыңызға отырыңыздар.':'Келесі қағазды ашайық!')); });
-gdPaint(false);
+gdPaint(false); if(!rosterNow().length) rbList(true);
 
 /* 3. Миға шабуыл */
 const BQ=[
@@ -1048,32 +1074,100 @@ LABS.cGas={frame(ctx,w,h,dt){ const bx=30,by=30,bw=520,bh=260, v=.35;
   if(all&&!GS2.wall){ ctx.fillStyle='rgba(46,125,79,.9)'; rr(ctx,bx+130,by+bh/2-20,260,40,6); ctx.fill(); label(ctx,'Бәрі сол жақта!',bx+260,by+bh/2+7,'#fff',20,'center',true); } }};
 gsInit();
 
-/* 9. Энергия ағыны */
-const FL={mode:'eng',t:0};
-function flUI(){ const e=FL.mode==='eng'; $('flEng').classList.toggle('on',e); $('flFr').classList.toggle('on',!e);
-  $('flLbl').textContent=e?'Суытқышқа берілетін жылу Q₂':'Сыртқы жұмыс (электр энергиясы) A';
-  if(e){ $('flS').max=900; $('flS').step=50; } else { $('flS').max=500; $('flS').step=25; }
-  $('flV').textContent=$('flS').value+' Дж'; }
-$('flEng').onclick=()=>{ FL.mode='eng'; $('flS').value=600; flUI(); }; $('flFr').onclick=()=>{ FL.mode='fr'; $('flS').value=200; flUI(); };
-$('flS').oninput=flUI; flUI();
-LABS.cFlow={frame(ctx,w,h,dt){ FL.t+=dt; const v=+$('flS').value, e=FL.mode==='eng';
+/* 9. Жылу қозғалтқышы мен тоңазытқыш: формула қадаммен ашылады */
+const FW={mode:'eng',step:1,t:0,auto:false,autoT:0,P:[],shown:[0,0,0]};
+const FWTXT={
+  eng:[
+    '<b>1. Жылытқыш</b> (T₁ – ыстық: жанған отын, бу қазаны) жұмыс денесіне – цилиндрдегі <b>газға</b> <b style="color:#d2462f">Q₁ = 1000 Дж</b> жылу береді. Газ қызады.',
+    '<b>2. Газ ұлғаяды</b> да поршеньді итереді → маховик айналады. Газ <b style="color:#b8892a">A = 400 Дж</b> пайдалы жұмыс атқарады.',
+    '<b>3. Қалған жылу</b> <b style="color:#2f6fb5">Q₂ = 600 Дж</b> міндетті түрде <b>суытқышқа</b> (T₂ – суық: ауа, су) беріледі. Газ суып, бастапқы күйге оралады – цикл қайталанады.',
+    '<b>4. Энергия сақталады:</b> жылытқыштан алынған жылу жұмыс пен суытқышқа кеткен жылудың қосындысына тең:<div class="fbig">Q₁ = A + Q₂ &nbsp;→&nbsp; 1000 = 400 + 600</div>',
+    '<b>5. Неге Q₂ ≠ 0?</b> Газды қайта қысу үшін оны суыту керек – жылудың бір бөлігі міндетті түрде кетеді (<b>Томсон</b>). Сондықтан <div class="fbig">ПӘК = A / Q₁ = 400 / 1000 = 40 % &lt; 100 %</div>'],
+  fr:[
+    '<b>1. Тоңазытқыш камерасы</b> (T₂ – суық): түтікшедегі агент буланып, тағамнан <b style="color:#2f6fb5">Q₂ = 300 Дж</b> жылу алады. Камера салқындайды.',
+    '<b>2. Компрессор</b> электр энергиясы есебінен <b style="color:#b8892a">A = 200 Дж</b> жұмыс жасайды: агентті қысып, қыздырады.',
+    '<b>3. Артқы тор</b> (конденсатор) бөлмеге (T₁ – жылы) <b style="color:#d2462f">Q₁ = 500 Дж</b> жылу береді.',
+    '<b>4. Энергия сақталады:</b> бөлмеге берілген жылу камерадан алынған жылу мен электр жұмысының қосындысы:<div class="fbig">Q₁ = Q₂ + A &nbsp;→&nbsp; 500 = 300 + 200</div>',
+    '<b>5. Клаузиус:</b> жылу суықтан ыстыққа <b>өздігінен</b> өтпейді – тек сыртқы жұмыс <b>A</b> есебінен. Сондықтан тоңазытқыштың <b>артқы торы жылы</b>, ал бөлме салқындамайды!']};
+const FWV={eng:{Q1:1000,A:400,Q2:600},fr:{Q1:500,A:200,Q2:300}};
+function fwUI(){ const e=FW.mode==='eng'; $('fwEng').classList.toggle('on',e); $('fwFr').classList.toggle('on',!e);
+  $('fwN').textContent=FW.step+' / 5'; $('fwPrev').disabled=FW.step<=1; $('fwNext').disabled=FW.step>=5; $('fwTxt').innerHTML=FWTXT[FW.mode][FW.step-1]; $('fwAuto').textContent=FW.auto?'⏸ Тоқтату':'▶ Өзі көрсетсін'; }
+function fwSet(m){ FW.mode=m; FW.step=1; FW.P=[]; FW.shown=[0,0,0]; FW.auto=false; fwUI(); SND.page(); }
+function fwGo(d){ FW.step=clamp(FW.step+d,1,5); fwUI(); SND.page(); }
+$('fwEng').onclick=()=>fwSet('eng'); $('fwFr').onclick=()=>fwSet('fr');
+$('fwPrev').onclick=()=>{ FW.auto=false; fwGo(-1); }; $('fwNext').onclick=()=>{ FW.auto=false; fwGo(1); };
+$('fwAuto').onclick=()=>{ FW.auto=!FW.auto; if(FW.auto&&FW.step>=5){ FW.step=1; FW.shown=[0,0,0]; } FW.autoT=0; fwUI(); };
+fwUI();
+function fwPath(pts,f){ // сынық сызық бойымен f∈[0,1]
+  let L=0; const seg=[]; for(let i=1;i<pts.length;i++){ const d=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]); seg.push(d); L+=d; }
+  let s=f*L; for(let i=0;i<seg.length;i++){ if(s<=seg[i]){ const k=s/seg[i]; return [lerp(pts[i][0],pts[i+1][0],k),lerp(pts[i][1],pts[i+1][1],k)]; } s-=seg[i]; } return pts[pts.length-1]; }
+function fwBars(ctx,x,y,h,V,mode,step,t){ // оң жақ: есептегіштер
+  const items=mode==='eng'?[['Q₁',V.Q1,'#d2462f',1],['A',V.A,'#c79a3a',2],['Q₂',V.Q2,'#2f6fb5',3]]:[['Q₂',V.Q2,'#2f6fb5',1],['A',V.A,'#c79a3a',2],['Q₁',V.Q1,'#d2462f',3]];
+  const mx=Math.max(V.Q1,V.A,V.Q2); ctx.fillStyle='#fff'; rr(ctx,x,y,170,h,8); ctx.fill(); ctx.strokeStyle='#d9d1c0'; ctx.stroke();
+  label(ctx,'Энергия, Дж',x+85,y+22,'#1d2430',14,'center',true);
+  items.forEach((it,i)=>{ const on=step>=it[3], k=on?Math.min(1,FW.shown[i]):0; if(on) FW.shown[i]=Math.min(1,FW.shown[i]+.02);
+    const bx=x+18+i*50, bh=(h-90)*it[1]/mx*k, by=y+h-36; ctx.fillStyle='#efe8da'; ctx.fillRect(bx,y+40,34,h-76); ctx.fillStyle=it[2]; ctx.fillRect(bx,by-bh,34,bh);
+    label(ctx,it[0],bx+17,y+h-14,it[2],17,'center',true,'Times New Roman, serif'); if(on) label(ctx,String(Math.round(it[1]*k)),bx+17,by-bh-6,'#1d2430',13,'center',true); }); }
+function fwStack(ctx,x,y,V,mode){ // 4-қадам: Q₁ бағанасы = A + Q₂
+  const s=130/V.Q1, a=mode==='eng'?['A',V.A,'#c79a3a']:['Q₂',V.Q2,'#2f6fb5'], b=mode==='eng'?['Q₂',V.Q2,'#2f6fb5']:['A',V.A,'#c79a3a'];
+  const H1=V.Q1*s; ctx.fillStyle='#d2462f'; ctx.fillRect(x,y-H1,48,H1); label(ctx,'Q₁',x+24,y+20,'#d2462f',18,'center',true,'Times New Roman, serif');
+  label(ctx,'=',x+76,y-H1/2+8,'#1d2430',30,'center',true);
+  const ha=a[1]*s, hb=b[1]*s; ctx.fillStyle=b[2]; ctx.fillRect(x+104,y-hb,48,hb); ctx.fillStyle=a[2]; ctx.fillRect(x+104,y-hb-ha,48,ha);
+  ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(x+104,y-hb); ctx.lineTo(x+152,y-hb); ctx.stroke();
+  label(ctx,a[0],x+128,y-hb-ha/2+6,'#fff',16,'center',true,'Times New Roman, serif'); label(ctx,b[0],x+128,y-hb/2+6,'#fff',16,'center',true,'Times New Roman, serif');
+  label(ctx,a[0]+' + '+b[0],x+128,y+20,'#1d2430',16,'center',true,'Times New Roman, serif'); }
+LABS.cFlow2={frame(ctx,w,h,dt){ FW.t+=dt; const t=FW.t, st=FW.step, V=FWV[FW.mode], e=FW.mode==='eng';
+  if(FW.auto){ FW.autoT+=dt; if(FW.autoT>6){ FW.autoT=0; if(FW.step<5) fwGo(1); else { FW.auto=false; fwUI(); } } }
   ctx.fillStyle='#f6f1e7'; ctx.fillRect(0,0,w,h);
-  const cx=300; rr(ctx,cx-150,14,300,52,8); ctx.fillStyle='#f4c9bd'; ctx.fill(); label(ctx,e?'Жылытқыш (T₁ – ыстық)':'Бөлме (T₁ – жылы)',cx,47,'#7a2e1f',18,'center',true);
-  rr(ctx,cx-150,h-66,300,52,8); ctx.fillStyle='#cfe0f2'; ctx.fill(); label(ctx,e?'Суытқыш (T₂ – суық)':'Тоңазытқыш камерасы (T₂ – суық)',cx,h-33,'#1f5fa8',18,'center',true);
-  ctx.fillStyle='#4a4f57'; ctx.beginPath(); ctx.arc(cx,h/2,44,0,7); ctx.fill(); label(ctx,e?'⚙':'❄',cx,h/2+12,'#fff',34,'center',true);
-  let Q1,Q2,A,bad=false,msg='';
-  if(e){ Q1=1000; Q2=v; A=Q1-Q2; if(Q2<50){ bad=true; msg='Мүмкін емес! Кельвин тұжырымы: Q₂ ≠ 0'; } }
-  else { Q2=400; A=v; Q1=Q2+A; if(A<25){ bad=true; msg='Мүмкін емес! Клаузиус тұжырымы: A ≠ 0'; } }
-  const sc=.055, wq1=Math.max(4,Q1*sc*.6), wq2=Math.max(3,Q2*sc*.6), wa=Math.max(3,A*sc*.6);
-  if(e){ arrow(ctx,cx,70,cx,h/2-46,wq1,'#d2462f'); arrow(ctx,cx,h/2+46,cx,h-70,wq2,'#2f6fb5'); arrow(ctx,cx+46,h/2,cx+240,h/2,wa,'#c79a3a'); }
-  else { arrow(ctx,cx,h-70,cx,h/2+46,wq2,'#2f6fb5'); arrow(ctx,cx,h/2-46,cx,70,wq1,'#d2462f'); arrow(ctx,cx-240,h/2,cx-46,h/2,wa,'#c79a3a'); }
-  label(ctx,'Q₁ = '+Q1+' Дж',cx+18+wq1/2,118,'#d2462f',17,'left',true);
-  label(ctx,'Q₂ = '+Q2+' Дж',cx+18+wq2/2,h-92,'#2f6fb5',17,'left',true);
-  label(ctx,'A = '+A+' Дж',e?cx+150:cx-150,h/2-wa/2-10,'#9a7426',17,'center',true);
-  label(ctx,e?'Q₁ = A + Q₂':'Q₁ = Q₂ + A',690,70,'#1d2430',26,'center',true,'Times New Roman, serif');
-  if(e) label(ctx,'Жұмысқа айналған үлес: '+Math.round(A/Q1*100)+'%',690,110,'#555',16,'center');
-  if(bad){ const bl=(Math.sin(FL.t*6)+1)/2; ctx.fillStyle=`rgba(192,57,43,${.6+.35*bl})`; rr(ctx,520,140,310,70,8); ctx.fill(); label(ctx,msg.split('!')[0]+'!',675,170,'#fff',20,'center',true); label(ctx,msg.split('! ')[1]||'',675,196,'#fff',14,'center'); }
-  else { label(ctx,e?'Жылудың бір бөлігі міндетті түрде':'Жылу суықтан жылыға тек',690,175,'#555',15,'center'); label(ctx,e?'суытқышқа беріледі':'сыртқы жұмыс есебінен «тасылады»',690,197,'#555',15,'center'); } }};
+  const flows=[]; // [жол, түс, қадам]
+  if(e){ // ---------- жылу қозғалтқышы ----------
+    const hot=st>=1, gasT=st>=1?1:0;
+    // жылытқыш
+    rr(ctx,30,22,200,92,10); ctx.fillStyle='#f4c9bd'; ctx.fill(); label(ctx,'Жылытқыш',130,52,'#7a2e1f',19,'center',true); label(ctx,'T₁ – ыстық',130,76,'#7a2e1f',15,'center');
+    for(let i=0;i<5;i++){ const fl=10+6*Math.sin(t*9+i*2); ctx.fillStyle=i%2?'#ffd75e':'#f08a3a'; ctx.beginPath(); ctx.ellipse(62+i*34,104,8,fl,0,0,7); ctx.fill(); }
+    // цилиндр, газ, поршень
+    const cx0=250,cy0=150,cw=230,ch=96, px=cx0+120+(st>=2?Math.sin(t*2.4)*45:0);
+    ctx.fillStyle='#e3e6ea'; ctx.fillRect(cx0,cy0,cw,ch); ctx.strokeStyle='#5b6168'; ctx.lineWidth=5; ctx.strokeRect(cx0,cy0,cw,ch);
+    const g=ctx.createLinearGradient(cx0,0,px,0); g.addColorStop(0,`rgba(210,70,47,${.25+.45*gasT})`); g.addColorStop(1,`rgba(240,138,58,${.2+.35*gasT})`); ctx.fillStyle=g; ctx.fillRect(cx0+3,cy0+3,px-cx0-3,ch-6);
+    for(let i=0;i<14;i++){ const fx=cx0+8+((i*37+t*90*(1+gasT))%(px-cx0-16)), fy=cy0+10+((i*53+t*70)%(ch-20)); ctx.fillStyle='#b8442f'; ctx.beginPath(); ctx.arc(fx,fy,3.5,0,7); ctx.fill(); }
+    label(ctx,'газ',cx0+40,cy0+ch-12,'#7a2e1f',14,'left',true);
+    ctx.fillStyle='#4a4f57'; ctx.fillRect(px,cy0+4,18,ch-8);
+    // маховик
+    const wx=570,wy=198,wr=56, ang=st>=2?t*2.4:0, crx=wx+Math.cos(ang)*28, cry=wy+Math.sin(ang)*28;
+    ctx.strokeStyle='#4a4f57'; ctx.lineWidth=6; ctx.beginPath(); ctx.moveTo(px+18,cy0+ch/2); ctx.lineTo(crx,cry); ctx.stroke();
+    ctx.fillStyle='#3a3f45'; ctx.beginPath(); ctx.arc(wx,wy,wr,0,7); ctx.fill(); ctx.fillStyle='#9aa1aa'; ctx.beginPath(); ctx.arc(wx,wy,wr-12,0,7); ctx.fill();
+    ctx.strokeStyle='#3a3f45'; ctx.lineWidth=5; for(let i=0;i<4;i++){ const b=ang+i*Math.PI/2; ctx.beginPath(); ctx.moveTo(wx,wy); ctx.lineTo(wx+Math.cos(b)*(wr-12),wy+Math.sin(b)*(wr-12)); ctx.stroke(); }
+    ctx.fillStyle='#c79a3a'; ctx.beginPath(); ctx.arc(crx,cry,7,0,7); ctx.fill(); label(ctx,'жұмыс A',wx,wy+wr+22,'#9a7426',15,'center',true);
+    // суытқыш
+    rr(ctx,250,330,230,72,10); ctx.fillStyle='#cfe0f2'; ctx.fill(); label(ctx,'Суытқыш',365,360,'#1f5fa8',19,'center',true); label(ctx,'T₂ – суық (ауа, су)',365,384,'#1f5fa8',14,'center');
+    flows.push([[[130,114],[130,132],[300,132],[300,152]],'#d2462f',1,'Q₁'],[[[px+20,cy0+ch/2],[crx,cry]],'#c79a3a',2,'A'],[[[360,cy0+ch],[360,330]],'#2f6fb5',3,'Q₂']);
+    if(st>=1) label(ctx,'Q₁',210,128,'#d2462f',20,'center',true,'Times New Roman, serif');
+    if(st>=3) label(ctx,'Q₂',392,296,'#2f6fb5',20,'center',true,'Times New Roman, serif');
+  } else { // ---------- тоңазытқыш ----------
+    rr(ctx,30,22,230,380,12); ctx.fillStyle='#f4f6f8'; ctx.fill(); ctx.strokeStyle='#9aa1aa'; ctx.lineWidth=3; ctx.stroke();
+    ctx.fillStyle='#dfe9f5'; ctx.fillRect(44,36,202,250); for(let i=1;i<3;i++){ ctx.fillStyle='#b9c6d6'; ctx.fillRect(44,36+i*83,202,4); }
+    [[90,100,'#d2462f'],[150,100,'#2e7d4f'],[110,184,'#e0a92e'],[190,184,'#c8352b'],[100,266,'#8a4b1f']].forEach(([x,y,c])=>{ ctx.fillStyle=c; rr(ctx,x-18,y-24,36,26,5); ctx.fill(); });
+    // буландырғыш түтік
+    ctx.strokeStyle='#7fa9d6'; ctx.lineWidth=5; ctx.beginPath(); for(let i=0;i<6;i++){ ctx.moveTo(60,48+i*14); ctx.lineTo(230,48+i*14); } ctx.stroke();
+    ctx.fillStyle='rgba(255,255,255,.92)'; rr(ctx,92,46,106,46,6); ctx.fill(); label(ctx,'Камера',145,66,'#1f5fa8',17,'center',true); label(ctx,'T₂ – суық',145,85,'#1f5fa8',14,'center');
+    // компрессор және розетка
+    rr(ctx,150,312,90,62,10); ctx.fillStyle='#4a4f57'; ctx.fill(); label(ctx,'компрессор',195,348,'#fff',13,'center',true);
+    ctx.fillStyle='#fff'; rr(ctx,470,330,56,46,8); ctx.fill(); ctx.strokeStyle='#9aa1aa'; ctx.stroke(); label(ctx,'⚡',498,362,'#b8892a',24,'center',true); label(ctx,'электр',498,394,'#9a7426',14,'center',true);
+    ctx.strokeStyle='#1d2430'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(240,350); ctx.bezierCurveTo(330,390,400,340,470,352); ctx.stroke();
+    // артқы тор (конденсатор)
+    ctx.strokeStyle='#5b6168'; ctx.lineWidth=4; for(let i=0;i<10;i++){ ctx.beginPath(); ctx.moveTo(282,40+i*26); ctx.lineTo(312,40+i*26); ctx.stroke(); } ctx.beginPath(); ctx.moveTo(282,40); ctx.lineTo(282,274); ctx.moveTo(312,40); ctx.lineTo(312,274); ctx.stroke();
+    if(st>=3){ for(let k=0;k<4;k++){ ctx.strokeStyle=`rgba(210,70,47,${.4+.3*Math.sin(t*4+k)})`; ctx.lineWidth=3; ctx.beginPath(); for(let i=0;i<=20;i++){ const yy=60+k*55+Math.sin(i*.7+t*5)*6, xx=330+i*8; i?ctx.lineTo(xx,yy):ctx.moveTo(xx,yy); } ctx.stroke(); } }
+    label(ctx,'артқы тор',297,296,'#1d2430',13,'center',true);
+    rr(ctx,490,30,150,64,10); ctx.fillStyle='#f4c9bd'; ctx.fill(); label(ctx,'Бөлме',565,58,'#7a2e1f',18,'center',true); label(ctx,'T₁ – жылы',565,80,'#7a2e1f',14,'center');
+    flows.push([[[140,110],[250,110],[250,300],[200,312]],'#2f6fb5',1,'Q₂'],[[[470,352],[400,350],[240,340]],'#c79a3a',2,'A'],[[[312,150],[410,120],[490,70]],'#d2462f',3,'Q₁']);
+    if(st>=1) label(ctx,'Q₂',268,200,'#2f6fb5',20,'center',true,'Times New Roman, serif');
+    if(st>=2) label(ctx,'A',380,330,'#9a7426',20,'center',true,'Times New Roman, serif');
+    if(st>=3) label(ctx,'Q₁',455,112,'#d2462f',20,'center',true,'Times New Roman, serif'); }
+  // энергия бөлшектері ағады
+  flows.forEach(([pts,col,s],fi)=>{ if(st<s) return; const n=st===s?9:5; for(let i=0;i<n;i++){ const f=((t*.45)+i/n)%1, [x,y]=fwPath(pts,f); ctx.fillStyle=col; ctx.globalAlpha=st===s?1:.55; ctx.beginPath(); ctx.arc(x,y,st===s?7:5,0,7); ctx.fill(); ctx.globalAlpha=1; } });
+  fwBars(ctx,w-182,12,196,V,FW.mode,st,t);
+  if(st>=4){ const bx=w-178; ctx.fillStyle='#fff'; rr(ctx,bx-4,h-200,170,190,8); ctx.fill(); ctx.strokeStyle='#d9d1c0'; ctx.lineWidth=1; ctx.stroke(); fwStack(ctx,bx+4,h-38,V,FW.mode); }
+  label(ctx,'Қадам '+st+' / 5',14,h-10,'#6a6658',13,'left',true); }};
 
 /* 9а. Әлемнің «жылулық өлімі»: жұлдыздар мен суық денелердің температурасы теңеседі */
 const HD={t:0,run:false,B:[],P:[],tw:0};
@@ -1311,7 +1405,7 @@ const QUEST=(()=>{
   const sync=()=>{ lastSync=Date.now(); if(window.PH) PH.all(); };
 
   /* ---------- 3D: бірінші тұлғадан, шынайы бөлме ---------- */
-  const EYE=1.55, SPEED=3.4, TURN=2.1;
+  const EYE=1.55, SPEED=3.4, TURN=2.1, LOOKY=2.4, LOOKP=1.5;
   function load(cb){ if(window.THREE) return cb(); if(loading) return; loading=true; const s=document.createElement('script'); s.src='three.min.js'; s.onload=()=>{ loading=false; cb(); }; s.onerror=()=>{ loading=false; toast('three.min.js табылмады'); }; document.head.appendChild(s); }
   function cvs(w,h,fn){ const c=document.createElement('canvas'); c.width=w; c.height=h; fn(c.getContext('2d'),w,h); return c; }
   function ctex(c,rx,ry){ const t=new THREE.CanvasTexture(c); t.encoding=THREE.sRGBEncoding; t.anisotropy=4; if(rx){ t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(rx,ry); } return t; }
@@ -1406,10 +1500,12 @@ const QUEST=(()=>{
     T.sc.fog.color.set(0x20252c); resize(); }
 
   /* ---------- қозғалыс: джойстик ↑↓ – алға/артқа, ←→ – бұрылу ---------- */
-  const IN={x:0,y:0};
-  function vecIn(dt){ let tx=0,ty=0; if(Date.now()-S.inp.at<900){ tx=S.inp.x; ty=S.inp.y; } if(keys.l) tx-=1; if(keys.r) tx+=1; if(keys.u) ty-=1; if(keys.d) ty+=1;
-    tx=clamp(tx,-1,1); ty=clamp(ty,-1,1); if(Math.hypot(tx,ty)<.15){ tx=0; ty=0; }
-    const k=Math.min(1,dt*12); IN.x+=(tx-IN.x)*k; IN.y+=(ty-IN.y)*k; return IN; }
+  /* екі джойстик: x,y – жүру (оңға-солға қадам, алға-артқа), lx,ly – қарау (оңға-солға, жоғары-төмен) */
+  const IN={x:0,y:0,lx:0,ly:0};
+  function vecIn(dt){ let tx=0,ty=0,lx=0,ly=0; if(Date.now()-S.inp.at<900){ tx=S.inp.x; ty=S.inp.y; lx=S.inp.lx||0; ly=S.inp.ly||0; }
+    if(keys.ml) tx-=1; if(keys.mr) tx+=1; if(keys.u) ty-=1; if(keys.d) ty+=1; if(keys.l) lx-=1; if(keys.r) lx+=1; if(keys.lu) ly-=1; if(keys.ld) ly+=1;
+    tx=clamp(tx,-1,1); ty=clamp(ty,-1,1); lx=clamp(lx,-1,1); ly=clamp(ly,-1,1); if(Math.hypot(tx,ty)<.12){ tx=0; ty=0; } if(Math.hypot(lx,ly)<.12){ lx=0; ly=0; }
+    const k=Math.min(1,dt*12); IN.x+=(tx-IN.x)*k; IN.y+=(ty-IN.y)*k; IN.lx+=(lx-IN.lx)*k; IN.ly+=(ly-IN.ly)*k; return IN; }
   function collide(){ const r=.38; S.x=clamp(S.x,-9.6,9.6); S.z=clamp(S.z,-6.55,6.6);
     ST3.forEach(p=>{ const dx=S.x-p.x, dz=S.z-p.z, d=Math.hypot(dx,dz), m=.62+r; if(d<m&&d>1e-4){ S.x=p.x+dx/d*m; S.z=p.z+dz/d*m; } });
     (T?T.obs:[]).forEach(o=>{ const cx=clamp(S.x,o.x0,o.x1), cz=clamp(S.z,o.z0,o.z1), dx=S.x-cx, dz=S.z-cz, d=Math.hypot(dx,dz);
@@ -1430,7 +1526,8 @@ const QUEST=(()=>{
   function frame(dt){ if(!T||!T.grp) return; if(++fr%20===0) resize(); tune(dt);
     if(live()){ S.left-=dt; if(S.left<=0){ S.left=0; finish('time'); } }
     const v=vecIn(dt);
-    if(S.ph==='play'){ S.rot-=v.x*TURN*dt; const sp=-v.y*SPEED; if(Math.abs(sp)>.01){ S.x+=-Math.sin(S.rot)*sp*dt; S.z+=-Math.cos(S.rot)*sp*dt; S.walk+=dt*Math.abs(sp)*2.6; } collide();
+    if(S.ph==='play'){ S.rot-=v.lx*LOOKY*dt; S.pitch=clamp((S.pitch||0)-v.ly*LOOKP*dt,-.85,.75); const f=-v.y*SPEED, sd=v.x*SPEED*.85, s=Math.sin(S.rot), c=Math.cos(S.rot);
+      if(Math.abs(f)+Math.abs(sd)>.01){ S.x+=(-s*f+c*sd)*dt; S.z+=(-c*f-s*sd)*dt; S.walk+=dt*Math.hypot(f,sd)*2.6; } collide();
       for(let i=0;i<3;i++){ if(S.ph!=='play') break; if(S.st[i]&&S.st[i].done) continue; const p=ST3[i]; if(Math.hypot(S.x-p.x,S.z-p.z)<1.75) openQ(i); }
       if(S.ph==='play'&&!S.open&&allDone()&&Math.abs(S.x)<1.7&&S.z<-5.0) openCode(); }
     const t=performance.now()/1000;
@@ -1442,7 +1539,7 @@ const QUEST=(()=>{
     T.spin.forEach(o=>o.m.rotation.x+=dt*4); T.pist.forEach(o=>o.m.position.y=1.9+Math.sin(t*6+o.ph)*.18);
     T.fx.forEach(o=>{ if(o.k==='fire'){ o.m.scale.set(1,.8+Math.random()*.5,1); } else if(o.k==='smoke'){ const f=(t*.25+o.ph)%1; o.m.position.set(8.8+Math.sin(f*6+o.ph*9)*.3,3.2+f*1.5,-6.3); o.m.scale.setScalar(.3+f*1.2); o.m.material.opacity=.35*(1-f); }
       else if(o.k==='snow'){ o.m.position.y-=dt*.35; if(o.m.position.y<0) o.m.position.y=2.4; } });
-    const bob=Math.sin(S.walk)*.035; T.cam.position.set(S.x,EYE+bob,S.z); T.cam.rotation.set(-.06,S.rot,0);
+    const bob=Math.sin(S.walk)*.035; T.cam.position.set(S.x,EYE+bob,S.z); T.cam.rotation.set(S.pitch||0,S.rot,0);
     T.r.render(T.sc,T.cam); minimap(); hud(); if(live()&&Date.now()-lastSync>4000) sync(); }
   function hud(){ if(S.g<0){ if(hudSig!=='x'){ hudSig='x'; $('qHud').innerHTML=''; } return; } const sec=Math.ceil(S.left), sig=[S.g,S.ph,sec,S.sc,S.st.map(x=>x?x.d:'_').join(''),S.dn,Math.round(T.fps/5)].join('|'); if(sig===hudSig) return; hudSig=sig;
     $('qHud').innerHTML=`<div style="background:${room().c}">${S.g+1}-бөлме · ${GR[S.g].n} топ</div><div class="${sec<=20&&live()?'low':''}">⏱ <b>${fmt(S.left)}</b></div><div>⭐ <b>${S.sc}</b> балл</div><div>🔐 Код: <b>${S.st.map(x=>x?x.d:'_').join(' ')}</b></div>`+
@@ -1501,7 +1598,7 @@ const QUEST=(()=>{
   function rooms(){ $('qRooms').innerHTML=QROOMS.map((rm,i)=>`<button class="qrb${S.g===i&&S.ph!=='idle'?' cur':''}" data-r="${i}" style="background:${GR[i].c}"><span class="sc">${R[i]?R[i].sc+' б':''}</span>▶ ${i+1}-бөлме<small>${GR[i].n} топ · ${rm.n}</small></button>`).join(''); }
   function start(g){ if(live()||S.ph==='ready'){ if(!confirm('Қазір '+(S.g+1)+'-бөлме жүріп жатыр. Тоқтатып, жаңасын бастаймыз ба?')) return; }
     if(R[g]&&!confirm(GR[g].n+' топ бұл бөлмені ойнап қойған ('+R[g].sc+' балл). Қайта ойнайды ма?')) return;
-    load(()=>{ build(g); Object.assign(S,{g,ph:'ready',left:+$('qTime').value,sc:0,st:[null,null,null],qi:-1,bad:0,sel:[],perm:[],perms:room0perms(g),code:'',open:false,qm:'',drv:null,dn:'',inp:{x:0,y:0,at:0},x:START.x,z:START.z,rot:0,walk:0,bonus:0});
+    load(()=>{ build(g); Object.assign(S,{g,ph:'ready',left:+$('qTime').value,sc:0,st:[null,null,null],qi:-1,bad:0,sel:[],perm:[],perms:room0perms(g),code:'',open:false,qm:'',drv:null,dn:'',inp:{x:0,y:0,at:0},x:START.x,z:START.z,rot:0,pitch:0,walk:0,bonus:0});
       $('qOver').hidden=true; paintQ(); rooms(); hudSig=''; if(window.PH) PH.setAct('quest'); sync();
       voice.play([{k:'q_r'+g,t:TXT['q_r'+g]}],go); }); }
   function room0perms(g){ return QROOMS[g].q.map(q=>{ const n=(q.o||q.tiles||[]).length; let a; do{ a=shuffle([...Array(n).keys()]); }while(n>1&&a.every((v,i)=>v===i)); return a; }); }
@@ -1526,7 +1623,7 @@ const QUEST=(()=>{
     return {g:S.g,ph:S.ph,left:Math.ceil(S.left),sc:S.sc,dc:doneN(),drv:S.drv,dn:S.dn,q,code:S.ph==='code'?{n:S.code.length,m:S.qm.replace(/<[^>]+>/g,'')}:null,dig:S.st.map(x=>x?x.d:null),open:S.open}; }
   function onMsg(pid,m,s){ if(!s||S.g<0||s.g!==S.g) return;
     if(m.t==='drv'){ S.drv=pid; S.dn=s.n; hudSig=''; sync(); return; }
-    if(m.t==='in'){ if(!S.drv){ S.drv=pid; S.dn=s.n; hudSig=''; sync(); } if(pid===S.drv) S.inp={x:clamp(+m.x||0,-1,1),y:clamp(+m.y||0,-1,1),at:Date.now()}; return; }
+    if(m.t==='in'){ if(!S.drv){ S.drv=pid; S.dn=s.n; hudSig=''; sync(); } if(pid===S.drv) S.inp={x:clamp(+m.x||0,-1,1),y:clamp(+m.y||0,-1,1),lx:clamp(+m.lx||0,-1,1),ly:clamp(+m.ly||0,-1,1),at:Date.now()}; return; }
     if(m.t==='ans'&&S.ph==='q'&&m.i===S.qi) pzTap(m.v);
     if(m.t==='key'&&S.ph==='code') codeTap(m.v); }
 
@@ -1536,7 +1633,14 @@ const QUEST=(()=>{
     $('qOver').addEventListener('click',e=>{ if(e.target.closest('[data-qx]')){ $('qOver').hidden=true; } });
     $('qStage').addEventListener('click',e=>{ if(S.ph==='ready'&&!e.target.closest('#qQ,#qOver')){ voice.stop(); go(); } });
     $('qResB').onclick=results; $('qClr').onclick=clear;
-    const map={ArrowLeft:'l',ArrowRight:'r',ArrowUp:'u',ArrowDown:'d',a:'l',d:'r',w:'u',s:'d',A:'l',D:'r',W:'u',S:'d','ф':'l','в':'r','ц':'u','ы':'d'};
+    /* тышқанмен (не тақтада саусақпен) сүйреп жан-жаққа қарау */
+    (()=>{ const cv=$('c3q'); let drag=null;
+      cv.addEventListener('pointerdown',e=>{ if(S.ph!=='play') return; drag={id:e.pointerId,x:e.clientX,y:e.clientY}; try{ cv.setPointerCapture(e.pointerId); }catch(x){} cv.style.cursor='grabbing'; e.preventDefault(); });
+      cv.addEventListener('pointermove',e=>{ if(!drag||e.pointerId!==drag.id) return; const k=$('stage').getBoundingClientRect().width/1600||1, dx=(e.clientX-drag.x)/k, dy=(e.clientY-drag.y)/k; drag.x=e.clientX; drag.y=e.clientY;
+        S.rot-=dx*.0045; S.pitch=clamp((S.pitch||0)-dy*.0035,-.85,.75); });
+      const end=e=>{ if(drag&&(!e||e.pointerId===drag.id)){ drag=null; cv.style.cursor='grab'; } };
+      cv.addEventListener('pointerup',end); cv.addEventListener('pointercancel',end); cv.style.cursor='grab'; })();
+    const map={ArrowLeft:'l',ArrowRight:'r',ArrowUp:'u',ArrowDown:'d',w:'u',s:'d',a:'ml',d:'mr',W:'u',S:'d',A:'ml',D:'mr','ц':'u','ы':'d','ф':'ml','в':'mr',r:'lu',f:'ld',R:'lu',F:'ld','к':'lu','а':'ld'};
     addEventListener('keydown',e=>{ if(slides[cur].id!=='slQuest'||!live()) return; const k=map[e.key]; if(!k) return; keys[k]=true; e.preventDefault(); e.stopPropagation(); },true);
     addEventListener('keyup',e=>{ const k=map[e.key]; if(k) keys[k]=false; },true); }
   function enter(){ load(()=>{ init3(); if(!T.grp) build(S.g>=0?S.g:0); resize(); }); }
