@@ -70,7 +70,11 @@ const OQ=(()=>{
   const qLeft=()=>{ const q=ST.qs; if(!q) return 0; const run=q.ph==='play'||q.ph==='q'||q.ph==='qok'; return Math.max(0,q.left-(run?(Date.now()-qAt)/1000:0)); };
   const qfmt=s=>{ s=Math.ceil(s); return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); };
   setInterval(()=>{ if(screen==='quest'){ const e=$('qpT'); if(e) e.textContent=qfmt(qLeft()); }
-    if(net&&joyOn) joySend(); else if(net&&joyZero>0){ joyZero--; net.send({t:'in',x:0,y:0,lx:0,ly:0,s:PSENS}); } },110);
+    if(net&&joyZero>0){ joyZero--; net.send({t:'in',x:0,y:0,lx:0,ly:0,s:PSENS}); } },150);
+  /* джойстик: өзгергенде ғана жібереді (ең жиі 80 мс), ұстап тұрғанда 250 мс сайын қайталайды – желіге жүк аз, үзіліс аз */
+  let joyLast=null, joyLastAt=0;
+  setInterval(()=>{ if(!net||!joyOn) return; const now=Date.now(), d=joyLast?Math.max(Math.abs(joyV.x-joyLast.x),Math.abs(joyV.y-joyLast.y),Math.abs(joyV.lx-joyLast.lx),Math.abs(joyV.ly-joyLast.ly)):1;
+    if((d>.04&&now-joyLastAt>=80)||now-joyLastAt>=250){ joySend(); joyLast={...joyV}; joyLastAt=now; } },40);
   let PSENS=0.6; try{ PSENS=+localStorage.getItem('t2_qsens')||0.6; }catch(e){}
   const joySend=()=>net.send({t:'in',x:+joyV.x.toFixed(2),y:+joyV.y.toFixed(2),lx:+joyV.lx.toFixed(2),ly:+joyV.ly.toFixed(2),s:PSENS});
   function vQuest(){ const q=ST.qs||{g:-1}; if(screen!=='quest'){ qSig=''; cover(true); } screen='quest'; shown=null; setTop();
@@ -103,11 +107,11 @@ const OQ=(()=>{
         const mv=e=>{ const r=J.getBoundingClientRect(), R=r.width/2, dx=e.clientX-(r.left+R), dy=e.clientY-(r.top+R), L=Math.hypot(dx,dy), k=L>R*.85?R*.85/L:1;
           K.style.transform=`translate(${dx*k}px,${dy*k}px)`; let n=Math.min(1,L/(R*.85)); n=n<.14?0:(n-.14)/.86; const vx=L?dx/L*n:0, vy=L?dy/L*n:0;   // ортасында өлі аймақ
           if(w===0){ joyV.x=vx; joyV.y=vy; } else { joyV.lx=vx; joyV.ly=vy; }
-          if(Date.now()-joySent>55&&net){ joySent=Date.now(); joySend(); } };
+        };
         J.addEventListener('pointerdown',e=>{ pidT=e.pointerId; try{ J.setPointerCapture(e.pointerId); }catch(x){} joyA[w]=true; joyOn=true; mv(e); e.preventDefault(); });
         J.addEventListener('pointermove',e=>{ if(joyA[w]&&e.pointerId===pidT) mv(e); });
         const up=e=>{ if(e&&pidT!=null&&e.pointerId!==pidT) return; joyA[w]=false; pidT=null; if(w===0){ joyV.x=0; joyV.y=0; } else { joyV.lx=0; joyV.ly=0; } K.style.transform='';
-          joyOn=joyA[0]||joyA[1]; if(net) joySend(); if(!joyOn) joyZero=3; };
+          joyOn=joyA[0]||joyA[1]; if(net){ joySend(); joyLast={...joyV}; joyLastAt=Date.now(); } if(!joyOn) joyZero=2; };
         J.addEventListener('pointerup',up); J.addEventListener('pointercancel',up); }); }
     else { const e=$('qpT'); if(e) e.textContent=qfmt(qLeft()); } }
 
@@ -120,7 +124,7 @@ const OQ=(()=>{
   function hello(){ if(net) net.send({t:'hello',name:NAME,g:G}); }
   /* байланыс бірден ашылады: кірмей тұрып та сынып тізімін мұғалімнің компьютерінен сұрайды */
   function openNet(){ if(net) return;
-    net=NET.openPad({room:OQROOM,pid:PID,onMsg,onStatus:s=>{ top.querySelector('.oqdot').className='oqdot '+(s==='on'?'on':s==='off'?'off':''); if(s==='on'){ lastSeen=Date.now(); if(started) hello(); else net.send({t:'cls?'}); } }});
+    net=NET.openPad({room:OQROOM,pid:PID,onMsg,onStatus:s=>{ top.querySelector('.oqdot').className='oqdot '+(s==='on'?'on':s==='off'?'off':''); const nb=$('oqNet'); if(nb) nb.hidden=s==='on'; if(s==='on'){ lastSeen=Date.now(); if(started) hello(); else net.send({t:'cls?'}); } }});
     setTimeout(()=>{ if(!started) net.send({t:'cls?'}); },700);
     setInterval(()=>{ if(!net||!net.online) return; if(!started){ net.send({t:'cls?'}); } else if(!joined) hello(); else net.send({t:'ping',n:NAME,g:G,p:summ()});
       /* мұғалім бұл серверде естімесе, келесі серверге өтеміз */
@@ -132,6 +136,7 @@ const OQ=(()=>{
     top=document.createElement('div'); top.className='oqtop'; top.innerHTML='<span class="oqdot"></span><span class="nm"></span><span class="oqtm" hidden></span><span class="oqgp" hidden></span>'; document.body.appendChild(top); setInterval(paintTm,500);
     app=document.createElement('div'); app.className='oqapp'; document.body.appendChild(app);
     sc=document.createElement('div'); sc.className='oqsc'; sc.hidden=true; document.body.appendChild(sc);
+    const nb=document.createElement('div'); nb.id='oqNet'; nb.className='oqnet'; nb.hidden=true; nb.textContent='📵 Байланыс үзілді – қайта қосылып жатыр…'; document.body.appendChild(nb);
     top.hidden=false; openNet(); if(store.get('in',false)&&NAME) start(); else vName(); }
   return {init,report,get ST(){return ST;},PID,get shown(){return shown;}};
 })();

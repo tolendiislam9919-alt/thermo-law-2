@@ -424,6 +424,8 @@ html.oq .toast{position:fixed;top:54px;font-size:16px;width:max-content;max-widt
 .gpick{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .gpick button{font:700 18px "Segoe UI";color:#fff;border:4px solid transparent;border-radius:12px;padding:18px 4px;opacity:.55}
 .gpick button.on{opacity:1;border-color:#1d2430;box-shadow:0 4px 12px rgba(0,0,0,.25)}
+.oqnet{position:fixed;left:0;right:0;top:46px;z-index:45;background:#c0392b;color:#fff;font:700 16px 'Segoe UI';text-align:center;padding:8px}
+.oqnet[hidden]{display:none}
 .oqsc{position:fixed;left:0;right:0;bottom:0;z-index:39;background:#1d2430;color:#fff;font:600 15px "Segoe UI";padding:7px 12px;text-align:center}
 .oqsc[hidden]{display:none}
 </style>
@@ -1411,6 +1413,7 @@ const QUEST=(()=>{
   const keys={};
   const room=()=>QROOMS[S.g];
   const live=()=>S.ph==='play'||S.ph==='q'||S.ph==='qok'||S.ph==='code';
+  const drvOk=()=>!S.drv||!window.PH||Date.now()-PH.seenAt(S.drv)<6000;   // жүргізушінің телефоны соңғы 6 с ішінде хабар берді ме
   const doneN=()=>S.st.filter(x=>x&&x.done).length;
   const allDone=()=>doneN()===3;
   const fmt=s=>{ s=Math.max(0,Math.ceil(s)); return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); };
@@ -1519,7 +1522,7 @@ const QUEST=(()=>{
   /* ---------- қозғалыс: джойстик ↑↓ – алға/артқа, ←→ – бұрылу ---------- */
   /* екі джойстик: x,y – жүру (оңға-солға қадам, алға-артқа), lx,ly – қарау (оңға-солға, жоғары-төмен) */
   const IN={x:0,y:0,lx:0,ly:0};
-  function vecIn(dt){ let tx=0,ty=0,lx=0,ly=0; if(Date.now()-S.inp.at<900){ tx=S.inp.x; ty=S.inp.y; lx=S.inp.lx||0; ly=S.inp.ly||0; }
+  function vecIn(dt){ let tx=0,ty=0,lx=0,ly=0; if(Date.now()-S.inp.at<1600){ tx=S.inp.x; ty=S.inp.y; lx=S.inp.lx||0; ly=S.inp.ly||0; }
     if(keys.ml) tx-=1; if(keys.mr) tx+=1; if(keys.u) ty-=1; if(keys.d) ty+=1; if(keys.l) lx-=1; if(keys.r) lx+=1; if(keys.lu) ly-=1; if(keys.ld) ly+=1;
     tx=clamp(tx,-1,1); ty=clamp(ty,-1,1); lx=clamp(lx,-1,1); ly=clamp(ly,-1,1); if(Math.hypot(tx,ty)<.12){ tx=0; ty=0; } if(Math.hypot(lx,ly)<.12){ lx=0; ly=0; }
     tx=curve(tx); ty=curve(ty); lx=curve(lx); ly=curve(ly);
@@ -1544,7 +1547,7 @@ const QUEST=(()=>{
   function frame(dt){ if(!T||!T.grp) return; if(++fr%20===0) resize(); tune(dt);
     if(live()){ S.left-=dt; if(S.left<=0){ S.left=0; finish('time'); } }
     const v=vecIn(dt);
-    const SE=SENS*((Date.now()-S.inp.at<900&&S.inp.s)?S.inp.s:1);   // тақтадағы × телефондағы сезімталдық
+    const SE=SENS*((Date.now()-S.inp.at<1600&&S.inp.s)?S.inp.s:1);   // тақтадағы × телефондағы сезімталдық
     if(S.ph==='play'){ S.rot-=v.lx*LOOKY*SE*dt; S.pitch=clamp((S.pitch||0)-v.ly*LOOKP*SE*dt,-.85,.75); const f=-v.y*SPEED*(.6+.4*SE), sd=v.x*SPEED*.7*(.6+.4*SE), s=Math.sin(S.rot), c=Math.cos(S.rot);
       if(Math.abs(f)+Math.abs(sd)>.01){ S.x+=(-s*f+c*sd)*dt; S.z+=(-c*f-s*sd)*dt; S.walk+=dt*Math.hypot(f,sd)*2.6; } collide();
       for(let i=0;i<3;i++){ if(S.ph!=='play') break; if(S.st[i]&&S.st[i].done) continue; const p=ST3[i]; if(Math.hypot(S.x-p.x,S.z-p.z)<1.75) openQ(i); }
@@ -1560,9 +1563,9 @@ const QUEST=(()=>{
       else if(o.k==='snow'){ o.m.position.y-=dt*.35; if(o.m.position.y<0) o.m.position.y=2.4; } });
     const bob=Math.sin(S.walk)*.035; T.cam.position.set(S.x,EYE+bob,S.z); T.cam.rotation.set(S.pitch||0,S.rot,0);
     T.r.render(T.sc,T.cam); minimap(); hud(); if(live()&&Date.now()-lastSync>4000) sync(); }
-  function hud(){ if(S.g<0){ if(hudSig!=='x'){ hudSig='x'; $('qHud').innerHTML=''; } return; } const sec=Math.ceil(S.left), sig=[S.g,S.ph,sec,S.sc,S.st.map(x=>x?x.d:'_').join(''),S.dn,Math.round(T.fps/5)].join('|'); if(sig===hudSig) return; hudSig=sig;
+  function hud(){ if(S.g<0){ if(hudSig!=='x'){ hudSig='x'; $('qHud').innerHTML=''; } return; } const sec=Math.ceil(S.left), sig=[S.g,S.ph,sec,drvOk(),S.sc,S.st.map(x=>x?x.d:'_').join(''),S.dn,Math.round(T.fps/5)].join('|'); if(sig===hudSig) return; hudSig=sig;
     $('qHud').innerHTML=`<div style="background:${room().c}">${S.g+1}-бөлме · ${GR[S.g].n} топ</div><div class="${sec<=20&&live()?'low':''}">⏱ <b>${fmt(S.left)}</b></div><div>⭐ <b>${S.sc}</b> балл</div><div>🔐 Код: <b>${S.st.map(x=>x?x.d:'_').join(' ')}</b></div>`+
-      (S.ph==='ready'?'<div style="background:#e0a92e;color:#1d2430">Физбот түсіндіріп жатыр… (бассаңыз – бірден басталады)</div>':S.dn?`<div>🎮 ${esc(S.dn)}</div>`:(live()?'<div style="background:#e0a92e;color:#1d2430">📱 «Мен жүргіземін» басыңдар!</div>':''))+
+      (S.ph==='ready'?'<div style="background:#e0a92e;color:#1d2430">Физбот түсіндіріп жатыр… (бассаңыз – бірден басталады)</div>':S.dn?`<div${drvOk()?'':' style="background:#c0392b"'}>${drvOk()?'📶':'📵'} 🎮 ${esc(S.dn)}${drvOk()?'':' – байланыс жоқ!'}</div>`:(live()?'<div style="background:#e0a92e;color:#1d2430">📱 «Мен жүргіземін» басыңдар!</div>':''))+
       (/[?&]fps/.test(location.search)?`<div>${Math.round(T.fps)} FPS · ${T.pr.toFixed(2)}</div>`:''); }
 
   /* ---------- станция жұмбағы ---------- */

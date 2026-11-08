@@ -87,6 +87,6 @@ const PH=(()=>{
     setInterval(()=>{ if(overlayOn()) paintMon(); },2000);
     const og=go; go=function(i){ og(i); paintChip(); };
     paintList(); paintQR(); JR.build(); }
-  return {init,get D(){return D;},monitor,all,setGroup,regroup,setAct:release};
+  return {init,seenAt:pid=>seen[pid]||0,get D(){return D;},monitor,all,setGroup,regroup,setAct:release};
 })();
 window.PH=PH;
