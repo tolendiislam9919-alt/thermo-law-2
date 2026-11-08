@@ -95,8 +95,8 @@ const OQ=(()=>{
       app.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{ net.send({t:'key',v:b.dataset.k}); buzz(40); });
       /* екі джойстик: әрқайсысы өз саусағын ұстайды (multi-touch) */
       [['qpJM','qpKM',0],['qpJL','qpKL',1]].forEach(([jid,kid,w])=>{ const J=$(jid); if(!J) return; const K=$(kid); let pidT=null;
-        const mv=e=>{ const r=J.getBoundingClientRect(), R=r.width/2, dx=e.clientX-(r.left+R), dy=e.clientY-(r.top+R), L=Math.hypot(dx,dy), k=L>R*.7?R*.7/L:1;
-          K.style.transform=`translate(${dx*k}px,${dy*k}px)`; const n=Math.min(1,L/(R*.7)), vx=L?dx/L*n:0, vy=L?dy/L*n:0;
+        const mv=e=>{ const r=J.getBoundingClientRect(), R=r.width/2, dx=e.clientX-(r.left+R), dy=e.clientY-(r.top+R), L=Math.hypot(dx,dy), k=L>R*.85?R*.85/L:1;
+          K.style.transform=`translate(${dx*k}px,${dy*k}px)`; const n=Math.min(1,L/(R*.85)), vx=L?dx/L*n:0, vy=L?dy/L*n:0;
           if(w===0){ joyV.x=vx; joyV.y=vy; } else { joyV.lx=vx; joyV.ly=vy; }
           if(Date.now()-joySent>55&&net){ joySent=Date.now(); joySend(); } };
         J.addEventListener('pointerdown',e=>{ pidT=e.pointerId; try{ J.setPointerCapture(e.pointerId); }catch(x){} joyA[w]=true; joyOn=true; mv(e); e.preventDefault(); });

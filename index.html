@@ -628,6 +628,7 @@ html.oq .toast{position:fixed;top:54px;font-size:16px;width:max-content;max-widt
       <div class="asbub" id="qSay">Мен – <b>Физбот</b>. Үш бөлме – үш топ! Бөлмені таңдаңыз: топ телефонымен джойстикті ашып, тапсырмаларды орындайды.</div>
       <div class="qrooms" id="qRooms"></div>
       <div class="qctl"><label>Уақыт <select id="qTime"><option value="120">2:00</option><option value="150" selected>2:30</option><option value="180">3:00</option><option value="240">4:00</option></select></label>
+        <label>Сезімталдық <select id="qSens"><option value="0.6">Баяу</option><option value="1">Орташа</option><option value="1.45">Жылдам</option></select></label>
         <button class="btn main" id="qResB">🤖 Нәтижені есепте</button><button class="btn" id="qClr" title="Квест нәтижелерін тазалау">↺ Тазалау</button></div>
     </div>
     <div class="qstage" id="qStage">
@@ -1405,7 +1406,10 @@ const QUEST=(()=>{
   const sync=()=>{ lastSync=Date.now(); if(window.PH) PH.all(); };
 
   /* ---------- 3D: бірінші тұлғадан, шынайы бөлме ---------- */
-  const EYE=1.55, SPEED=3.4, TURN=2.1, LOOKY=2.4, LOOKP=1.5;
+  const EYE=1.55, SPEED=2.5, TURN=2.1, LOOKY=1.25, LOOKP=.75;
+  /* сезімталдық: Баяу / Орташа / Жылдам (тақтадан таңдалады) */
+  let SENS=store.get('qsens',1);
+  const curve=v=>Math.sign(v)*Math.pow(Math.abs(v),1.8);   // ортасында – дәл, шетінде – жылдам
   function load(cb){ if(window.THREE) return cb(); if(loading) return; loading=true; const s=document.createElement('script'); s.src='three.min.js'; s.onload=()=>{ loading=false; cb(); }; s.onerror=()=>{ loading=false; toast('three.min.js табылмады'); }; document.head.appendChild(s); }
   function cvs(w,h,fn){ const c=document.createElement('canvas'); c.width=w; c.height=h; fn(c.getContext('2d'),w,h); return c; }
   function ctex(c,rx,ry){ const t=new THREE.CanvasTexture(c); t.encoding=THREE.sRGBEncoding; t.anisotropy=4; if(rx){ t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(rx,ry); } return t; }
@@ -1505,7 +1509,8 @@ const QUEST=(()=>{
   function vecIn(dt){ let tx=0,ty=0,lx=0,ly=0; if(Date.now()-S.inp.at<900){ tx=S.inp.x; ty=S.inp.y; lx=S.inp.lx||0; ly=S.inp.ly||0; }
     if(keys.ml) tx-=1; if(keys.mr) tx+=1; if(keys.u) ty-=1; if(keys.d) ty+=1; if(keys.l) lx-=1; if(keys.r) lx+=1; if(keys.lu) ly-=1; if(keys.ld) ly+=1;
     tx=clamp(tx,-1,1); ty=clamp(ty,-1,1); lx=clamp(lx,-1,1); ly=clamp(ly,-1,1); if(Math.hypot(tx,ty)<.12){ tx=0; ty=0; } if(Math.hypot(lx,ly)<.12){ lx=0; ly=0; }
-    const k=Math.min(1,dt*12); IN.x+=(tx-IN.x)*k; IN.y+=(ty-IN.y)*k; IN.lx+=(lx-IN.lx)*k; IN.ly+=(ly-IN.ly)*k; return IN; }
+    tx=curve(tx); ty=curve(ty); lx=curve(lx); ly=curve(ly);
+    const k=Math.min(1,dt*7), kl=Math.min(1,dt*9); IN.x+=(tx-IN.x)*k; IN.y+=(ty-IN.y)*k; IN.lx+=(lx-IN.lx)*kl; IN.ly+=(ly-IN.ly)*kl; return IN; }
   function collide(){ const r=.38; S.x=clamp(S.x,-9.6,9.6); S.z=clamp(S.z,-6.55,6.6);
     ST3.forEach(p=>{ const dx=S.x-p.x, dz=S.z-p.z, d=Math.hypot(dx,dz), m=.62+r; if(d<m&&d>1e-4){ S.x=p.x+dx/d*m; S.z=p.z+dz/d*m; } });
     (T?T.obs:[]).forEach(o=>{ const cx=clamp(S.x,o.x0,o.x1), cz=clamp(S.z,o.z0,o.z1), dx=S.x-cx, dz=S.z-cz, d=Math.hypot(dx,dz);
@@ -1526,7 +1531,7 @@ const QUEST=(()=>{
   function frame(dt){ if(!T||!T.grp) return; if(++fr%20===0) resize(); tune(dt);
     if(live()){ S.left-=dt; if(S.left<=0){ S.left=0; finish('time'); } }
     const v=vecIn(dt);
-    if(S.ph==='play'){ S.rot-=v.lx*LOOKY*dt; S.pitch=clamp((S.pitch||0)-v.ly*LOOKP*dt,-.85,.75); const f=-v.y*SPEED, sd=v.x*SPEED*.85, s=Math.sin(S.rot), c=Math.cos(S.rot);
+    if(S.ph==='play'){ S.rot-=v.lx*LOOKY*SENS*dt; S.pitch=clamp((S.pitch||0)-v.ly*LOOKP*SENS*dt,-.85,.75); const f=-v.y*SPEED*(.75+.25*SENS), sd=v.x*SPEED*.7*(.75+.25*SENS), s=Math.sin(S.rot), c=Math.cos(S.rot);
       if(Math.abs(f)+Math.abs(sd)>.01){ S.x+=(-s*f+c*sd)*dt; S.z+=(-c*f-s*sd)*dt; S.walk+=dt*Math.hypot(f,sd)*2.6; } collide();
       for(let i=0;i<3;i++){ if(S.ph!=='play') break; if(S.st[i]&&S.st[i].done) continue; const p=ST3[i]; if(Math.hypot(S.x-p.x,S.z-p.z)<1.75) openQ(i); }
       if(S.ph==='play'&&!S.open&&allDone()&&Math.abs(S.x)<1.7&&S.z<-5.0) openCode(); }
@@ -1633,11 +1638,12 @@ const QUEST=(()=>{
     $('qOver').addEventListener('click',e=>{ if(e.target.closest('[data-qx]')){ $('qOver').hidden=true; } });
     $('qStage').addEventListener('click',e=>{ if(S.ph==='ready'&&!e.target.closest('#qQ,#qOver')){ voice.stop(); go(); } });
     $('qResB').onclick=results; $('qClr').onclick=clear;
+    $('qSens').value=String(SENS); $('qSens').onchange=()=>{ SENS=+$('qSens').value||1; store.set('qsens',SENS); toast('Сезімталдық: '+$('qSens').selectedOptions[0].text); };
     /* тышқанмен (не тақтада саусақпен) сүйреп жан-жаққа қарау */
     (()=>{ const cv=$('c3q'); let drag=null;
       cv.addEventListener('pointerdown',e=>{ if(S.ph!=='play') return; drag={id:e.pointerId,x:e.clientX,y:e.clientY}; try{ cv.setPointerCapture(e.pointerId); }catch(x){} cv.style.cursor='grabbing'; e.preventDefault(); });
       cv.addEventListener('pointermove',e=>{ if(!drag||e.pointerId!==drag.id) return; const k=$('stage').getBoundingClientRect().width/1600||1, dx=(e.clientX-drag.x)/k, dy=(e.clientY-drag.y)/k; drag.x=e.clientX; drag.y=e.clientY;
-        S.rot-=dx*.0045; S.pitch=clamp((S.pitch||0)-dy*.0035,-.85,.75); });
+        S.rot-=dx*.0028*SENS; S.pitch=clamp((S.pitch||0)-dy*.0022*SENS,-.85,.75); });
       const end=e=>{ if(drag&&(!e||e.pointerId===drag.id)){ drag=null; cv.style.cursor='grab'; } };
       cv.addEventListener('pointerup',end); cv.addEventListener('pointercancel',end); cv.style.cursor='grab'; })();
     const map={ArrowLeft:'l',ArrowRight:'r',ArrowUp:'u',ArrowDown:'d',w:'u',s:'d',a:'ml',d:'mr',W:'u',S:'d',A:'ml',D:'mr','ц':'u','ы':'d','ф':'ml','в':'mr',r:'lu',f:'ld',R:'lu',F:'ld','к':'lu','а':'ld'};
