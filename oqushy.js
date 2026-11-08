@@ -70,8 +70,9 @@ const OQ=(()=>{
   const qLeft=()=>{ const q=ST.qs; if(!q) return 0; const run=q.ph==='play'||q.ph==='q'||q.ph==='qok'; return Math.max(0,q.left-(run?(Date.now()-qAt)/1000:0)); };
   const qfmt=s=>{ s=Math.ceil(s); return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); };
   setInterval(()=>{ if(screen==='quest'){ const e=$('qpT'); if(e) e.textContent=qfmt(qLeft()); }
-    if(net&&joyOn) joySend(); else if(net&&joyZero>0){ joyZero--; net.send({t:'in',x:0,y:0,lx:0,ly:0}); } },110);
-  const joySend=()=>net.send({t:'in',x:+joyV.x.toFixed(2),y:+joyV.y.toFixed(2),lx:+joyV.lx.toFixed(2),ly:+joyV.ly.toFixed(2)});
+    if(net&&joyOn) joySend(); else if(net&&joyZero>0){ joyZero--; net.send({t:'in',x:0,y:0,lx:0,ly:0,s:PSENS}); } },110);
+  let PSENS=0.6; try{ PSENS=+localStorage.getItem('t2_qsens')||0.6; }catch(e){}
+  const joySend=()=>net.send({t:'in',x:+joyV.x.toFixed(2),y:+joyV.y.toFixed(2),lx:+joyV.lx.toFixed(2),ly:+joyV.ly.toFixed(2),s:PSENS});
   function vQuest(){ const q=ST.qs||{g:-1}; if(screen!=='quest'){ qSig=''; cover(true); } screen='quest'; shown=null; setTop();
     const rm=QROOMS[q.g], mine=!!rm&&q.g===G, drv=q.drv===PID;
     const sig=[q.g,mine,q.ph,drv,q.drv||'',q.dn||'',q.q?q.q.i+':'+q.q.bad+':'+q.q.sel.join(',')+':'+q.q.ok+':'+q.q.m:'',q.code?q.code.n+':'+q.code.m:'',(q.dig||[]).join(',')].join('|');
@@ -86,17 +87,21 @@ const OQ=(()=>{
         else if(q.q) h+=`<h1 style="font-size:20px;margin-top:10px">Станция ${q.q.i+1}</h1><p style="font:700 20px/1.45 'Segoe UI'">${esc(q.q.t)}</p>`+(q.q.f?`<div class="fhint">Кеңес: ${esc(q.q.f)}</div>`:'')+
           (q.q.k==='num'?`<div class="kpad n10">${[1,2,3,4,5,6,7,8,9,0].map(v=>`<button data-v="${v}"${q.q.ok?' disabled':''}>${v}</button>`).join('')}</div>`:`<div class="qpo">${q.q.items.map((o,j)=>`<button data-v="${j}"${q.q.ok||q.q.sel.includes(j)?' disabled':''}>${q.q.sel.includes(j)&&q.q.k==='order'?'<b>'+(q.q.sel.indexOf(j)+1)+'.</b> ':''}${esc(o)}</button>`).join('')}</div>`)+
           `<p style="font:700 17px 'Segoe UI'">${esc(q.q.m||'Тобыңмен бірге есептеп, жауапты бас!')}</p>`;
-        else if(drv) h+=`<p class="mut" style="margin:10px 0 0">Сен – <b>жүргізушісің</b>. Тақтаға қарап жүргіз: <b>сол жақпен – жүр</b>, <b>оң жақпен – жан-жаққа қара</b>. Станцияларға (1, 2, 3) бар, сосын <b>есікке</b>!</p><div class="joys"><div><div class="joy" id="qpJM"><div class="knob" id="qpKM" style="background:${rm.c}"></div></div><p>🚶 Жүру</p></div><div><div class="joy" id="qpJL"><div class="knob" id="qpKL" style="background:#1d2430"></div></div><p>👀 Қарау</p></div></div><p class="mut">Станция: ${q.dc}/3</p>`;
+        else if(drv) h+=`<div class="sensrow">🎚 Сезімталдық <input type="range" id="qpSens" min="0.2" max="1.2" step="0.05" value="${PSENS}"><b id="qpSensV">${Math.round(PSENS*100)}%</b><button class="btn" id="qpFs" title="Толық экран, көлденең">⤢</button></div><p class="mut drvtxt" style="margin:8px 0 0">Сен – <b>жүргізушісің</b>. Тақтаға қарап жүргіз: <b>сол жақпен – жүр</b>, <b>оң жақпен – жан-жаққа қара</b>. Телефонды <b>көлденең</b> ұстасаң да болады.</p><div class="joys"><div><div class="joy" id="qpJM"><div class="knob" id="qpKM" style="background:${rm.c}"></div></div><p>🚶 Жүру</p></div><div><div class="joy" id="qpJL"><div class="knob" id="qpKL" style="background:#1d2430"></div></div><p>👀 Қарау</p></div></div><p class="mut drvtxt">Станция: ${q.dc}/3</p>`;
         else h+=`<div style="font-size:48px;margin-top:14px">🎮</div><h1 style="font-size:21px">${q.drv?'Жүргізуші: '+esc(q.dn):'Әзірге жүргізуші жоқ!'}</h1><p class="mut">Станцияға жеткенде сұрақ осы жерде шығады – бірге жауап беріңдер!</p><button class="drv" id="qpDrv" style="background:${rm.c}">🎮 ${q.drv?'Мен жүргізейін':'Мен жүргіземін'}</button>`;
         h+='</div>'; }
       app.innerHTML=h;
+      const qpEl=app.querySelector('.qp'), isDrv=!!$('qpJM'); if(qpEl) qpEl.classList.toggle('drvmode',isDrv); app.style.touchAction=isDrv?'none':''; document.body.style.overscrollBehavior=isDrv?'none':'';
+      const sr=$('qpSens'); if(sr) sr.oninput=()=>{ PSENS=+sr.value; $('qpSensV').textContent=Math.round(PSENS*100)+'%'; try{ localStorage.setItem('t2_qsens',PSENS); }catch(e){} };
+      const fsb=$('qpFs'); if(fsb) fsb.onclick=()=>{ const el=document.documentElement; const lock=()=>{ try{ screen.orientation&&screen.orientation.lock&&screen.orientation.lock('landscape').catch(()=>{}); }catch(e){} };
+        if(!document.fullscreenElement&&el.requestFullscreen) el.requestFullscreen().then(lock).catch(()=>toast('Телефонды көлденең бұрыңыз')); else if(document.fullscreenElement) document.exitFullscreen(); else toast('Телефонды көлденең бұрыңыз'); };
       const d=$('qpDrv'); if(d) d.onclick=()=>{ net.send({t:'drv'}); d.disabled=true; d.textContent='…'; buzz(60); };
       app.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{ net.send({t:'ans',i:q.q.i,v:b.dataset.v}); buzz(40); });
       app.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{ net.send({t:'key',v:b.dataset.k}); buzz(40); });
       /* екі джойстик: әрқайсысы өз саусағын ұстайды (multi-touch) */
       [['qpJM','qpKM',0],['qpJL','qpKL',1]].forEach(([jid,kid,w])=>{ const J=$(jid); if(!J) return; const K=$(kid); let pidT=null;
         const mv=e=>{ const r=J.getBoundingClientRect(), R=r.width/2, dx=e.clientX-(r.left+R), dy=e.clientY-(r.top+R), L=Math.hypot(dx,dy), k=L>R*.85?R*.85/L:1;
-          K.style.transform=`translate(${dx*k}px,${dy*k}px)`; const n=Math.min(1,L/(R*.85)), vx=L?dx/L*n:0, vy=L?dy/L*n:0;
+          K.style.transform=`translate(${dx*k}px,${dy*k}px)`; let n=Math.min(1,L/(R*.85)); n=n<.14?0:(n-.14)/.86; const vx=L?dx/L*n:0, vy=L?dy/L*n:0;   // ортасында өлі аймақ
           if(w===0){ joyV.x=vx; joyV.y=vy; } else { joyV.lx=vx; joyV.ly=vy; }
           if(Date.now()-joySent>55&&net){ joySent=Date.now(); joySend(); } };
         J.addEventListener('pointerdown',e=>{ pidT=e.pointerId; try{ J.setPointerCapture(e.pointerId); }catch(x){} joyA[w]=true; joyOn=true; mv(e); e.preventDefault(); });
