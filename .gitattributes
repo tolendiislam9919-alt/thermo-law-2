@@ -1,0 +1,2 @@
+# start.bat CRLF күйінде қалсын (әйтпесе Windows-та сервер ашылмайды)
+*.bat -text
