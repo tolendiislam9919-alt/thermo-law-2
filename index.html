@@ -189,6 +189,10 @@ sup,sub{font-size:.72em;line-height:0}
 .qbar.win b::after{content:" 🏆"}
 .qbigbot{width:230px} .qbigbot svg{width:230px;height:253px}
 .qover[hidden],.qqbox[hidden]{display:none!important}
+.qbtns{position:absolute;left:16px;bottom:16px;display:flex;align-items:flex-end;gap:10px;z-index:3;user-select:none;touch-action:none}
+.qbtns .qcol{display:flex;flex-direction:column;gap:10px}
+.qbtns button{width:96px;height:96px;border-radius:18px;border:3px solid rgba(255,255,255,.75);background:rgba(29,36,48,.55);color:#fff;font:800 40px "Segoe UI";cursor:pointer;touch-action:none;backdrop-filter:blur(2px)}
+.qbtns button.on{background:rgba(224,169,46,.9);color:#1d2430}
 .qmap{position:absolute;right:12px;top:10px;border-radius:8px;pointer-events:none}
 .qcross{position:absolute;left:50%;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;border:2px solid rgba(255,255,255,.55);pointer-events:none}
 .qhint{position:absolute;right:12px;bottom:10px;color:rgba(255,255,255,.7);font:14px "Segoe UI";pointer-events:none}
@@ -652,7 +656,8 @@ html.oq .toast{position:fixed;top:54px;font-size:16px;width:max-content;max-widt
       <div class="qhud" id="qHud"></div>
       <div class="qqbox" id="qQ" hidden></div>
       <div class="qover" id="qOver" hidden></div>
-      <div class="qhint" id="qHint">Телефон: сол джойстик – жүру, оң – қарау. Компьютер: тышқанмен сүйреп – қарау, W A S D – жүру, ← → – бұрылу</div>
+      <div class="qbtns" id="qBtns"><button data-k="l" title="Солға бұрылу">◀</button><div class="qcol"><button data-k="u" title="Алға">▲</button><button data-k="d" title="Артқа">▼</button></div><button data-k="r" title="Оңға бұрылу">▶</button></div>
+      <div class="qhint" id="qHint">👆 Еденді түртсең – кейіпкер сол жерге барады · ▲◀▶▼ – басып тұрып жүру · сүйресең – жан-жаққа қарау</div>
     </div>
   </div>
 </section>
@@ -1515,6 +1520,7 @@ const QUEST=(()=>{
     mesh(G,BX(2.5,2.6,.25),M({color:0x3a2a1a,roughness:.6}),0,1.3,-6.98,true);
     const dc=cvs(256,512,(x,W,H2)=>{ x.fillStyle='#7a5530'; x.fillRect(0,0,W,H2); for(let i=0;i<60;i++){ x.strokeStyle=`rgba(40,25,10,${Math.random()*.25})`; x.beginPath(); const yy=Math.random()*H2; x.moveTo(0,yy); x.bezierCurveTo(W*.3,yy+8,W*.7,yy-8,W,yy+3); x.stroke(); } x.strokeStyle='rgba(30,18,8,.6)'; x.lineWidth=6; x.strokeRect(30,40,W-60,H2*.4); x.strokeRect(30,H2*.5,W-60,H2*.42); });
     const dm=M({map:ctex(dc),roughness:.55}); const dp=mesh(G,BX(1.9,2.3,.1),dm,0,1.15,-6.82,true); const hd=new THREE.Mesh(new THREE.SphereGeometry(.06,12,8),M({color:0xd4b25a,metalness:.9,roughness:.2})); hd.position.set(.7,-.05,.08); dp.add(hd); T.door=dp;
+    T.goalM=mesh(G,new THREE.RingGeometry(.28,.45,32),new THREE.MeshBasicMaterial({color:0xffd75e,transparent:true,opacity:.85,side:THREE.DoubleSide,depthWrite:false}),0,.03,0,false,false); T.goalM.rotation.x=-Math.PI/2; T.goalM.visible=false;
     const sgM=new THREE.MeshBasicMaterial({map:labelTex('ШЫҒУ','#fff','#c0392b',256,96,58)}); T.sign=mesh(G,BX(1.1,.4,.08),sgM,0,2.85,-6.9,false,false); T.kc=cvs(256,128,()=>{}); T.kt=ctex(T.kc); mesh(G,new THREE.PlaneGeometry(1.1,.55),new THREE.MeshBasicMaterial({map:T.kt}),1.85,1.5,-6.95,false,false); T.klast=''; T.signM=sgM; T.signOpen=false;
     const dg=new THREE.Sprite(new THREE.SpriteMaterial({color:0xff4a3a,transparent:true,opacity:.35,blending:THREE.AdditiveBlending,depthWrite:false})); dg.scale.set(2.6,1.4,1); dg.position.set(0,2.85,-6.8); G.add(dg); T.doorL=dg.material;
     T.sc.fog.color.set(0x20252c); resize(); }
@@ -1527,6 +1533,17 @@ const QUEST=(()=>{
     tx=clamp(tx,-1,1); ty=clamp(ty,-1,1); lx=clamp(lx,-1,1); ly=clamp(ly,-1,1); if(Math.hypot(tx,ty)<.12){ tx=0; ty=0; } if(Math.hypot(lx,ly)<.12){ lx=0; ly=0; }
     tx=curve(tx); ty=curve(ty); lx=curve(lx); ly=curve(ly);
     const k=Math.min(1,dt*7), kl=Math.min(1,dt*9); IN.x+=(tx-IN.x)*k; IN.y+=(ty-IN.y)*k; IN.lx+=(lx-IN.lx)*kl; IN.ly+=(ly-IN.ly)*kl; return IN; }
+  const angD=(a,b)=>{ let d=(a-b)%(Math.PI*2); if(d>Math.PI) d-=Math.PI*2; if(d<-Math.PI) d+=Math.PI*2; return d; };
+  function tapGoal(e){ if(!T||S.ph!=='play') return; const r=$('c3q').getBoundingClientRect(), nx=(e.clientX-r.left)/r.width*2-1, ny=-(e.clientY-r.top)/r.height*2+1;
+    const rc=new THREE.Raycaster(); rc.setFromCamera({x:nx,y:ny},T.cam); const o=rc.ray.origin, d=rc.ray.direction;
+    if(d.y>-.03){ S.goal={turn:S.rot-nx*1.1,lt:Date.now()}; return; }        // жоғарыны түртсе – сол жаққа бұрылады
+    const t=-o.y/d.y; S.goal={x:clamp(o.x+d.x*t,-9.3,9.3),z:clamp(o.z+d.z*t,-6.45,6.5),lp:{x:S.x,z:S.z},lt:Date.now()}; SND.clink(); }
+  function goalStep(dt,manual){ const g=S.goal; if(!g) return; if(manual){ S.goal=null; return; }
+    if(g.turn!=null){ const da=angD(g.turn,S.rot); S.rot+=clamp(da,-2.4*dt,2.4*dt); if(Math.abs(da)<.02) S.goal=null; return; }
+    const gx=g.x-S.x, gz=g.z-S.z, L=Math.hypot(gx,gz); if(L<.35){ S.goal=null; return; }
+    const da=angD(Math.atan2(-gx,-gz),S.rot); S.rot+=clamp(da,-2.6*dt,2.6*dt); S.pitch=(S.pitch||0)*(1-Math.min(1,dt*2));
+    if(Math.abs(da)<.8){ const sp=SPEED*.95*Math.min(1,L/.8+.3)*(1-Math.abs(da)/1.2); S.x+=gx/L*sp*dt; S.z+=gz/L*sp*dt; S.walk+=dt*sp*2.6; }
+    if(Date.now()-g.lt>900){ if(Math.abs(da)<.8&&Math.hypot(S.x-g.lp.x,S.z-g.lp.z)<.12){ S.goal=null; return; } g.lp={x:S.x,z:S.z}; g.lt=Date.now(); } }
   function collide(){ const r=.38; S.x=clamp(S.x,-9.6,9.6); S.z=clamp(S.z,-6.55,6.6);
     ST3.forEach(p=>{ const dx=S.x-p.x, dz=S.z-p.z, d=Math.hypot(dx,dz), m=.62+r; if(d<m&&d>1e-4){ S.x=p.x+dx/d*m; S.z=p.z+dz/d*m; } });
     (T?T.obs:[]).forEach(o=>{ const cx=clamp(S.x,o.x0,o.x1), cz=clamp(S.z,o.z0,o.z1), dx=S.x-cx, dz=S.z-cz, d=Math.hypot(dx,dz);
@@ -1549,8 +1566,10 @@ const QUEST=(()=>{
     const v=vecIn(dt);
     const SE=SENS*((Date.now()-S.inp.at<1600&&S.inp.s)?S.inp.s:1);   // тақтадағы × телефондағы сезімталдық
     if(S.ph==='play'){ S.rot-=v.lx*LOOKY*SE*dt; S.pitch=clamp((S.pitch||0)-v.ly*LOOKP*SE*dt,-.85,.75); const f=-v.y*SPEED*(.6+.4*SE), sd=v.x*SPEED*.7*(.6+.4*SE), s=Math.sin(S.rot), c=Math.cos(S.rot);
-      if(Math.abs(f)+Math.abs(sd)>.01){ S.x+=(-s*f+c*sd)*dt; S.z+=(-c*f-s*sd)*dt; S.walk+=dt*Math.hypot(f,sd)*2.6; } collide();
+      const manual=Math.abs(f)+Math.abs(sd)>.01||Math.abs(v.lx)>.05||Math.abs(v.ly)>.05;
+      if(Math.abs(f)+Math.abs(sd)>.01){ S.x+=(-s*f+c*sd)*dt; S.z+=(-c*f-s*sd)*dt; S.walk+=dt*Math.hypot(f,sd)*2.6; } goalStep(dt,manual); collide();
       for(let i=0;i<3;i++){ if(S.ph!=='play') break; if(S.st[i]&&S.st[i].done) continue; const p=ST3[i]; if(Math.hypot(S.x-p.x,S.z-p.z)<1.75) openQ(i); }
+      if(S.ph!=='play') S.goal=null;
       if(S.ph==='play'&&!S.open&&allDone()&&Math.abs(S.x)<1.7&&S.z<-5.0) openCode(); }
     const t=performance.now()/1000;
     T.gems.forEach((o,i)=>{ const s=S.st[i], d=!!(s&&s.done), key=d?'d'+s.p+s.d:'n'; if(o.last!==key){ o.last=key; const nc=screenTex(i,s,QROOMS[Math.max(0,S.g)].c); o.sc.getContext('2d').drawImage(nc,0,0); o.st.needsUpdate=true; }
@@ -1561,11 +1580,12 @@ const QUEST=(()=>{
     T.spin.forEach(o=>o.m.rotation.x+=dt*4); T.pist.forEach(o=>o.m.position.y=1.9+Math.sin(t*6+o.ph)*.18);
     T.fx.forEach(o=>{ if(o.k==='fire'){ o.m.scale.set(1,.8+Math.random()*.5,1); } else if(o.k==='smoke'){ const f=(t*.25+o.ph)%1; o.m.position.set(8.8+Math.sin(f*6+o.ph*9)*.3,3.2+f*1.5,-6.3); o.m.scale.setScalar(.3+f*1.2); o.m.material.opacity=.35*(1-f); }
       else if(o.k==='snow'){ o.m.position.y-=dt*.35; if(o.m.position.y<0) o.m.position.y=2.4; } });
+    if(T.goalM){ const g=S.goal; T.goalM.visible=!!(g&&g.x!=null&&S.ph==='play'); if(T.goalM.visible){ T.goalM.position.set(g.x,.03,g.z); const k=1+.15*Math.sin(t*6); T.goalM.scale.set(k,k,k); } }
     const bob=Math.sin(S.walk)*.035; T.cam.position.set(S.x,EYE+bob,S.z); T.cam.rotation.set(S.pitch||0,S.rot,0);
     T.r.render(T.sc,T.cam); minimap(); hud(); if(live()&&Date.now()-lastSync>4000) sync(); }
   function hud(){ if(S.g<0){ if(hudSig!=='x'){ hudSig='x'; $('qHud').innerHTML=''; } return; } const sec=Math.ceil(S.left), sig=[S.g,S.ph,sec,drvOk(),S.sc,S.st.map(x=>x?x.d:'_').join(''),S.dn,Math.round(T.fps/5)].join('|'); if(sig===hudSig) return; hudSig=sig;
     $('qHud').innerHTML=`<div style="background:${room().c}">${S.g+1}-бөлме · ${GR[S.g].n} топ</div><div class="${sec<=20&&live()?'low':''}">⏱ <b>${fmt(S.left)}</b></div><div>⭐ <b>${S.sc}</b> балл</div><div>🔐 Код: <b>${S.st.map(x=>x?x.d:'_').join(' ')}</b></div>`+
-      (S.ph==='ready'?'<div style="background:#e0a92e;color:#1d2430">Физбот түсіндіріп жатыр… (бассаңыз – бірден басталады)</div>':S.dn?`<div${drvOk()?'':' style="background:#c0392b"'}>${drvOk()?'📶':'📵'} 🎮 ${esc(S.dn)}${drvOk()?'':' – байланыс жоқ!'}</div>`:(live()?'<div style="background:#e0a92e;color:#1d2430">📱 «Мен жүргіземін» басыңдар!</div>':''))+
+      (S.ph==='ready'?'<div style="background:#e0a92e;color:#1d2430">Физбот түсіндіріп жатыр… (бассаңыз – бірден басталады)</div>':S.dn?`<div${drvOk()?'':' style="background:#c0392b"'}>${drvOk()?'📶':'📵'} 🎮 ${esc(S.dn)}${drvOk()?'':' – байланыс жоқ!'}</div>`:(live()?'<div style="background:#e0a92e;color:#1d2430">👆 Экранды түртіп жүргізіңдер</div>':''))+
       (/[?&]fps/.test(location.search)?`<div>${Math.round(T.fps)} FPS · ${T.pr.toFixed(2)}</div>`:''); }
 
   /* ---------- станция жұмбағы ---------- */
@@ -1620,7 +1640,7 @@ const QUEST=(()=>{
   function rooms(){ $('qRooms').innerHTML=QROOMS.map((rm,i)=>`<button class="qrb${S.g===i&&S.ph!=='idle'?' cur':''}" data-r="${i}" style="background:${GR[i].c}"><span class="sc">${R[i]?R[i].sc+' б':''}</span>▶ ${i+1}-бөлме<small>${GR[i].n} топ · ${rm.n}</small></button>`).join(''); }
   function start(g){ if(live()||S.ph==='ready'){ if(!confirm('Қазір '+(S.g+1)+'-бөлме жүріп жатыр. Тоқтатып, жаңасын бастаймыз ба?')) return; }
     if(R[g]&&!confirm(GR[g].n+' топ бұл бөлмені ойнап қойған ('+R[g].sc+' балл). Қайта ойнайды ма?')) return;
-    load(()=>{ build(g); Object.assign(S,{g,ph:'ready',left:+$('qTime').value,sc:0,st:[null,null,null],qi:-1,bad:0,sel:[],perm:[],perms:room0perms(g),code:'',open:false,qm:'',drv:null,dn:'',inp:{x:0,y:0,at:0},x:START.x,z:START.z,rot:0,pitch:0,walk:0,bonus:0});
+    load(()=>{ build(g); Object.assign(S,{g,ph:'ready',left:+$('qTime').value,sc:0,st:[null,null,null],qi:-1,bad:0,sel:[],perm:[],perms:room0perms(g),code:'',open:false,qm:'',drv:null,dn:'',inp:{x:0,y:0,at:0},x:START.x,z:START.z,rot:0,pitch:0,walk:0,bonus:0,goal:null});
       $('qOver').hidden=true; paintQ(); rooms(); hudSig=''; if(window.PH) PH.setAct('quest'); sync();
       voice.play([{k:'q_r'+g,t:TXT['q_r'+g]}],go); }); }
   function room0perms(g){ return QROOMS[g].q.map(q=>{ const n=(q.o||q.tiles||[]).length; let a; do{ a=shuffle([...Array(n).keys()]); }while(n>1&&a.every((v,i)=>v===i)); return a; }); }
@@ -1657,13 +1677,20 @@ const QUEST=(()=>{
     $('qResB').onclick=results; $('qClr').onclick=clear;
     $('qGfx').value=store.get('qgfx','auto'); $('qGfx').onchange=()=>{ const v=$('qGfx').value; store.set('qgfx',v); if(T){ const lite=v==='lite'; T.maxPr=lite?.8:Math.min(1.25,window.devicePixelRatio||1); T.pr=T.maxPr; T.r.setPixelRatio(T.pr); T.r.shadowMap.enabled=!lite; T.grp&&T.grp.traverse(o=>{ if(o.material) [].concat(o.material).forEach(m=>m.needsUpdate=true); }); T.w=0; resize(); } toast('Графика: '+$('qGfx').selectedOptions[0].text); };
     $('qSens').value=String(SENS); $('qSens').onchange=()=>{ SENS=+$('qSens').value||1; store.set('qsens',SENS); toast('Сезімталдық: '+$('qSens').selectedOptions[0].text); };
-    /* тышқанмен (не тақтада саусақпен) сүйреп жан-жаққа қарау */
+    /* экранды түрту: еденді түртсе – кейіпкер сол жерге барады; сүйресе – жан-жаққа қарайды */
     (()=>{ const cv=$('c3q'); let drag=null;
-      cv.addEventListener('pointerdown',e=>{ if(S.ph!=='play') return; drag={id:e.pointerId,x:e.clientX,y:e.clientY}; try{ cv.setPointerCapture(e.pointerId); }catch(x){} cv.style.cursor='grabbing'; e.preventDefault(); });
-      cv.addEventListener('pointermove',e=>{ if(!drag||e.pointerId!==drag.id) return; const k=$('stage').getBoundingClientRect().width/1600||1, dx=(e.clientX-drag.x)/k, dy=(e.clientY-drag.y)/k; drag.x=e.clientX; drag.y=e.clientY;
+      cv.addEventListener('pointerdown',e=>{ if(S.ph!=='play') return; drag={id:e.pointerId,x:e.clientX,y:e.clientY,x0:e.clientX,y0:e.clientY,t:Date.now(),moved:false}; try{ cv.setPointerCapture(e.pointerId); }catch(x){} e.preventDefault(); });
+      cv.addEventListener('pointermove',e=>{ if(!drag||e.pointerId!==drag.id) return; if(!drag.moved&&Math.hypot(e.clientX-drag.x0,e.clientY-drag.y0)<12) return;
+        if(!drag.moved){ drag.moved=true; cv.style.cursor='grabbing'; }
+        const k=$('stage').getBoundingClientRect().width/1600||1, dx=(e.clientX-drag.x)/k, dy=(e.clientY-drag.y)/k; drag.x=e.clientX; drag.y=e.clientY;
         S.rot-=dx*.0028*SENS; S.pitch=clamp((S.pitch||0)-dy*.0022*SENS,-.85,.75); });
-      const end=e=>{ if(drag&&(!e||e.pointerId===drag.id)){ drag=null; cv.style.cursor='grab'; } };
-      cv.addEventListener('pointerup',end); cv.addEventListener('pointercancel',end); cv.style.cursor='grab'; })();
+      const end=e=>{ if(!drag||(e&&e.pointerId!==drag.id)) return; const tap=!drag.moved&&Date.now()-drag.t<700; drag=null; cv.style.cursor='pointer'; if(tap&&e&&e.type==='pointerup') tapGoal(e); };
+      cv.addEventListener('pointerup',end); cv.addEventListener('pointercancel',end); cv.style.cursor='pointer'; })();
+    /* ▲ ◀ ▶ ▼ батырмалары: басып тұрғанда жүреді / бұрылады */
+    $('qBtns').querySelectorAll('[data-k]').forEach(b=>{ const k=b.dataset.k;
+      const on=e=>{ e.preventDefault(); e.stopPropagation(); if(!live()) return; keys[k]=true; S.goal=null; b.classList.add('on'); try{ b.setPointerCapture(e.pointerId); }catch(x){} };
+      const off=()=>{ keys[k]=false; b.classList.remove('on'); };
+      b.addEventListener('pointerdown',on); b.addEventListener('pointerup',off); b.addEventListener('pointercancel',off); b.addEventListener('lostpointercapture',off); b.addEventListener('contextmenu',e=>e.preventDefault()); });
     const map={ArrowLeft:'l',ArrowRight:'r',ArrowUp:'u',ArrowDown:'d',w:'u',s:'d',a:'ml',d:'mr',W:'u',S:'d',A:'ml',D:'mr','ц':'u','ы':'d','ф':'ml','в':'mr',r:'lu',f:'ld',R:'lu',F:'ld','к':'lu','а':'ld'};
     addEventListener('keydown',e=>{ if(slides[cur].id!=='slQuest'||!live()) return; const k=map[e.key]; if(!k) return; keys[k]=true; e.preventDefault(); e.stopPropagation(); },true);
     addEventListener('keyup',e=>{ const k=map[e.key]; if(k) keys[k]=false; },true); }
